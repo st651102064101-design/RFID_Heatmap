@@ -1,0 +1,20 @@
+services:
+  librespeed:
+    image: ghcr.io/librespeed/speedtest:6.3.0
+    environment:
+      MODE: standalone
+      TELEMETRY: "false"
+      DISABLE_IPINFO: "true"
+    expose:
+      - "8080"
+    mem_limit: 256m
+    restart: unless-stopped
+
+  rfid-heartmap:
+    build: .
+    image: rfid-heartmap:local
+    ports:
+      - "8080:80"
+    depends_on:
+      - librespeed
+    restart: unless-stopped

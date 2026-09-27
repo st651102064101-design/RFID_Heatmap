@@ -1,0 +1,3222 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes" />
+<title>RFID Heatmap Mobile Prototype</title>
+<style>
+  :root{
+    --bg:#000;
+    --panel:#2c2a2b;
+    --panel2:#202020;
+    --line:#454345;
+    --text:#fff;
+    --muted:#9b989d;
+    --blue:#0a84ff;
+    --red:#ff453a;
+    --green:#30d158;
+    --orange:#ff9f0a;
+    --radius:18px;
+    --safe-top:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#111;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:var(--text)}
+  body{display:flex;justify-content:center;min-height:100vh}
+  button,input{font:inherit}
+  button{color:inherit}
+  #app{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    min-height:100dvh;
+    background:var(--bg);
+    position:relative;
+    overflow:hidden;
+  }
+  .screen{
+    position:absolute; inset:0;
+    background:#000;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    display:none;
+    padding-bottom:28px;
+  }
+  .screen.active{display:block}
+  .nav{
+    height:58px;
+    display:flex; align-items:center; justify-content:center;
+    position:sticky; top:0; z-index:24; background:#000;
+    border-bottom:1px solid #161616;
+  }
+  .nav .left,.nav .right{position:absolute; top:0; height:58px; display:flex; align-items:center}
+  .nav .left{left:16px}.nav .right{right:16px}
+  .nav h1{font-size:17px;margin:0;font-weight:700}
+  .link{background:none;border:0;color:var(--blue);font-size:17px;padding:8px 4px;cursor:pointer}
+  .back-chevron{width:34px;height:34px;vertical-align:-11px;margin-right:4px}
+  .icon-btn{background:none;border:0;padding:8px;color:var(--blue);font-size:25px;cursor:pointer}
+  .content{padding:18px 16px}
+  .search{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 10px;color:var(--muted);
+    margin:2px 8px 24px;
+    font-size:16px;
+  }
+  .search-icon{width:20px;height:20px;flex:0 0 20px;display:block;color:var(--muted)}
+  .search-icon path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  .search input{flex:1;background:none;border:0;outline:0;color:#fff;font-size:17px}
+  .section-row{display:flex;justify-content:space-between;align-items:center;padding:0 0 16px}
+  .sort-btn{background:none;border:0;color:var(--blue);font-size:16px;padding:0;cursor:pointer}
+  .sort-choice{color:#5da9ff!important}
+  .sort-choice.active{color:#0a84ff!important;font-weight:600}
+  .view-btn{background:none;border:0;color:var(--blue);width:32px;height:32px;padding:4px;cursor:pointer}
+  .view-btn svg{width:17px;height:17px;display:block}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .project-card{cursor:pointer;position:relative}
+  .project-menu-btn{position:absolute;top:10px;right:10px;z-index:2;width:22px;height:22px;border:0;border-radius:50%;background:rgba(0,0,0,.58);color:#ddd;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;letter-spacing:0;padding:0 0 2px;cursor:pointer}
+  .project-card .project-menu-btn{opacity:0;transition:opacity .15s ease}
+  .project-card:hover .project-menu-btn,.project-card:focus-within .project-menu-btn{opacity:1}
+  @media (hover:none),(pointer:coarse){.project-card .project-menu-btn{opacity:1}}
+  .list-row .project-menu-btn{position:static;flex:0 0 22px}
+  .thumb{
+    height:182px;border-radius:12px;background:#232323;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;border:1px solid #262626;
+  }
+  .thumb.add{color:#ddd}
+  .add-icon{width:40.6px;height:40.6px;display:block}
+  .add-icon path{fill:none;stroke:currentColor;stroke-width:2.7;stroke-linecap:butt}
+  .project-card .name{text-align:center;margin-top:8px;font-size:16px}
+  .project-card .date{text-align:center;color:#777;font-size:13px;margin-top:4px}
+  .list{display:none}
+  .list.active{display:block}.grid.hidden{display:none}
+  .list-row{display:flex;align-items:center;gap:14px;padding:12px 8px;border-top:1px solid #242424;cursor:pointer}
+  .list-row:last-child{border-bottom:1px solid #242424}
+  .mini-thumb{width:48px;height:48px;border-radius:9px;background:#343434;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 48px}
+  .mini-thumb .add-icon{width:29px;height:29px}
+  .list-row .meta{flex:1}.list-row .meta b{font-size:16px}.list-row .meta div{color:#aaa;font-size:13px;margin-top:3px}
+  .dots{font-size:22px;letter-spacing:2px}
+  .zone-menu-button{border:0;background:transparent;color:#f5f5f7;padding:8px 2px;cursor:pointer;line-height:1;font-size:11px;letter-spacing:1px;min-width:34px;min-height:36px}
+  .zone-menu-button:focus-visible{outline:2px solid var(--blue);border-radius:6px}
+  .add-zone-button{border:0;background:transparent;padding:0;color:var(--blue);font-size:15px;cursor:pointer}
+  .structure-list .add-zone-row{min-height:48px;padding:8px 15px}
+  .row .zone-name[contenteditable="true"]{outline:none;background:transparent;box-shadow:none;color:#fff;caret-color:#fff;cursor:text}
+  .list-row .dots{font-size:11px;letter-spacing:1px}
+  .floor-svg{width:100%;height:100%;display:block;background:#f7f7f7}
+  .sheet-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:50;display:none;align-items:flex-end;justify-content:center;
+  }
+  .sheet-backdrop.show{display:flex}
+  .sheet{width:min(414px,calc(100% - 16px));margin-bottom:12px}
+  .sheet-card{background:#2c2c2e;border-radius:14px;overflow:hidden;margin-top:8px}
+  .sheet-title{text-align:center;color:#aaa;padding:15px 14px;border-bottom:1px solid #454545;font-size:14px}
+  .sheet button{width:100%;border:0;border-bottom:1px solid #454545;background:#2c2c2e;color:#5da9ff;padding:16px 12px;font-size:18px}
+  .sheet button[hidden]{display:none}
+  .sheet button:last-child{border-bottom:0}.sheet .cancel{font-weight:700}
+  .project-action-sheet .resume-action{color:var(--blue)}
+  .project-action-sheet .delete-action{color:var(--red)}
+  .sheet #removeZoneAction{color:var(--red)}
+  .delete-confirm-backdrop.show{align-items:center;padding:18px}
+  .delete-confirm-sheet{width:min(280px,calc(100vw - 48px));max-width:calc(100vw - 32px);margin:0;transform:none}
+  .delete-confirm-card{background:#343436;border-radius:18px;overflow:hidden}
+  .delete-confirm-title{text-align:center;color:#f5f5f7;font-size:17px;font-weight:600;line-height:1.3;padding:20px 16px 18px;border-bottom:1px solid #555557}
+  .delete-confirm-actions{display:grid;grid-template-columns:1fr 1fr}
+  .sheet .delete-confirm-actions button{min-height:46px;padding:12px 10px;font-size:17px;background:transparent;border:0;border-radius:0}
+  .sheet .delete-confirm-actions button+button{border-left:1px solid #555557}
+  .sheet .delete-confirm-actions .confirm-no{color:#5da9ff}
+  .sheet .delete-confirm-actions .confirm-yes{color:var(--red)}
+  .discard-confirm-backdrop.show{align-items:center;padding:18px}
+  .discard-confirm-sheet{width:min(390px,calc(100vw - 48px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 36px);overflow-y:auto;margin:0;transform:scale(.65);transform-origin:center}
+  .discard-confirm-card{background:#343436;border-radius:18px;overflow:hidden}
+  .discard-confirm-title{text-align:center;color:#f5f5f7;font-size:18px;font-weight:600;padding:18px 14px 5px}
+  .discard-confirm-message{text-align:center;color:#f0f0f2;font-size:15px;line-height:1.4;padding:0 16px 17px}
+  .sheet .discard-confirm-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #555557}
+  .sheet .discard-confirm-actions button{padding:14px 10px;font-size:17px;background:transparent;border:0;border-radius:0}
+  .sheet .discard-confirm-actions button+button{border-left:1px solid #555557}
+  .sheet .discard-confirm-actions .discard-no{color:#5da9ff}
+  .sheet .discard-confirm-actions .discard-yes{color:#ff6259}
+  .hero{padding:22px 28px 10px;text-align:center}
+  .hero-thumb{width:102px;height:102px;border-radius:10px;margin:0 auto 17px;overflow:hidden}
+  .hero h2{font-size:26px;margin:0 0 8px}.hero .date{color:#9b989d;font-size:16px}
+  .primary-btn,.secondary-btn{
+    width:100%;border:0;border-radius:7px;padding:15px 14px;font-size:18px;font-weight:700;cursor:pointer
+  }
+  .primary-btn{background:var(--blue);color:#fff}.secondary-btn{background:#484848;color:#fff}
+  .helper{color:#999;text-align:center;font-size:14px;line-height:1.45;margin:10px 8px 28px}
+  .section-title{color:#aaa;font-size:13px;font-weight:700;margin:24px 0 8px;letter-spacing:.5px}
+  .card{background:var(--panel);border-radius:12px;overflow:hidden}
+  .row{min-height:64px;padding:12px 15px;display:flex;align-items:center;border-bottom:1px solid var(--line);gap:10px}
+  .row:last-child{border-bottom:0}
+  .row .label{flex:1}.row .sub{color:#aaa;font-size:14px;margin-top:3px}
+  .row .blue{color:var(--blue)}
+  .row .muted{color:#8e8b90}
+  .structure-list .child-row{min-height:40px;padding:6px 15px 6px 47px;cursor:pointer}
+  .structure-list>.row>.dots{font-size:11px;letter-spacing:1px}
+  .danger{color:var(--red)!important}
+  .delete{margin:34px 0;background:#2c2a2b;border:0;border-radius:12px;width:100%;padding:16px;color:var(--red);font-size:18px}
+  .details-pad{padding:0 15px 28px}
+  .top-action{padding:15px 40px 0}
+  .top-action .helper{font-size:9.8px}
+  .scan-info{
+    color:#b7b2b8;font-size:14px;line-height:1.4;padding:8px 14px 8px;border-bottom:1px solid #232323
+  }
+  .zone-setup.active{display:flex;flex-direction:column;background:#000}
+  #zoneSize{height:100%;min-height:0;overflow:hidden;overscroll-behavior:contain;touch-action:pinch-zoom}
+  #zoneDistance{height:100%;height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:contain;touch-action:pinch-zoom;padding-bottom:0}
+  .setup-header{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:center;position:relative}
+  .setup-header h1{font-size:17px;line-height:1.2;margin:0;font-weight:700;white-space:nowrap}
+  .setup-close{position:absolute;left:16px;top:50%;transform:translateY(-50%);padding:0;border:0;background:none;color:var(--blue);font-size:34px;line-height:1;cursor:pointer}
+  .setup-progress{height:2px;background:#29282c;flex:0 0 2px}
+  .setup-progress span{height:100%;display:block;background:var(--blue);transition:width .2s}
+  .setup-hint{min-height:48px;flex:0 0 auto;display:flex;align-items:center;padding:11px 15px;color:#999;font-size:14px;line-height:1.4}
+  .wizard-map{position:relative;flex:1 1 auto;min-height:300px;overflow:hidden;background:#242424;touch-action:none;cursor:grab;user-select:none}
+  .wizard-map:active{cursor:grabbing}
+  .wizard-map>img{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:contain;filter:none;opacity:1;pointer-events:none;will-change:transform}
+  .wizard-map:after{content:"";position:absolute;inset:0;background:transparent;pointer-events:none}
+  .distance-line{position:absolute;z-index:3;left:14%;top:50%;width:72%;height:2px;background:#ffd400;transform-origin:left center;pointer-events:none}
+  .distance-halo{position:absolute;z-index:2;left:14%;top:50%;width:96px;height:96px;border-radius:50%;background:rgba(255,212,0,.08);transform:translate(-50%,-50%);pointer-events:none}
+  .distance-point{position:absolute;z-index:4;left:14%;top:50%;width:28px;height:28px;border:1px solid #ffd400;border-radius:50%;background:transparent;transform:translate(-50%,-50%);touch-action:none;padding:0;cursor:grab}
+  .distance-point:after{content:"";position:absolute;inset:7px;border-radius:50%;background:#ffcf00}
+  .distance-point:active{cursor:grabbing}
+  .distance-chip{position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);height:38px;min-width:94px;width:max-content;border:0;border-radius:20px;background:#ffcc00;color:#191919;display:flex;align-items:center;justify-content:center;gap:3px;font-size:17px;padding:0 26px 0 12px;white-space:nowrap;overflow:visible}
+  .distance-chip-label{display:none}
+  .distance-chip:focus-within{z-index:8;left:50%!important;top:50%!important;transform:translate(-50%,-50%);width:min(292px,calc(100% - 40px));height:96px;min-width:0;border-radius:12px;background:#090a0f;color:#fff;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:22px 1fr;justify-content:stretch;gap:0;padding:12px 16px;text-align:left;box-shadow:0 8px 28px #0008}
+  .distance-chip:focus-within .distance-chip-label{display:block;grid-column:1/-1;color:#aaa;font-size:12px;line-height:18px}
+  .distance-chip input{width:5.5ch;min-width:5.5ch;flex:0 0 5.5ch;border:0;outline:0;background:transparent;color:inherit;text-align:right;font-size:17px;padding:0;appearance:textfield}
+  .distance-chip:focus-within input{width:auto;min-width:0;flex:1;text-align:left;font-size:34px;line-height:42px}
+  .distance-chip:focus-within #distanceChipUnit{font-size:19px;align-self:center;color:#fff}
+  #distanceChipUnit{display:flex;align-items:center;gap:5px;white-space:nowrap}
+  #distanceChipUnit [data-unit]{display:none}
+  #distanceChipUnit [data-unit].active{display:inline}
+  #distanceChipUnit [aria-hidden="true"]{display:none}
+  .distance-chip:focus-within #distanceChipUnit [data-unit],.distance-chip:focus-within #distanceChipUnit [aria-hidden="true"]{display:inline}
+  #distanceChipUnit [data-unit]{color:#81838c}
+  #distanceChipUnit [data-unit].active{color:inherit;font-weight:400}
+  .distance-chip input::-webkit-inner-spin-button,.distance-chip input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  .distance-chip:after{content:"›";position:absolute;right:9px;top:50%;transform:translateY(-52%);font-size:27px;line-height:1}
+  .distance-chip:focus-within:after{display:none}
+  .setup-footer{flex:0 0 auto;background:#000;padding:24px 30px 30px}
+  .wizard-continue{width:100%;height:54px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+  .new-project-screen.active{display:flex;flex-direction:column;padding:42px 0 28px}
+  .new-project-header{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:center;position:relative}
+  .new-project-header h1{font-size:17px;margin:0;font-weight:700}
+  .new-project-cancel{position:absolute;left:16px;border:0;background:none;color:var(--blue);font-size:17px;padding:8px;cursor:pointer}
+  .new-project-fields{padding:22px 20px;}
+  .new-project-name{display:block;width:100%;padding:0;border:0;outline:0;background:none;color:#fff;font-size:22px;font-weight:700}
+  .new-project-description{display:block;width:100%;min-height:78px;margin-top:30px;padding:0;border:0;outline:0;resize:none;background:none;color:#fff;font-size:16px}
+  .new-project-description::placeholder{color:#85858a;opacity:1}
+  .new-project-spacer{flex:1 1 auto;min-height:20px}
+  .new-project-image-row{height:112px;flex:0 0 112px;padding:15px 24px;display:flex;align-items:center;gap:20px;background:#29282b}
+  .new-project-image-row img{width:108px;height:82px;flex:0 0 108px;object-fit:cover;border-radius:10px;background:#eee}
+  .new-project-file-name{flex:1;text-align:center;font-size:17px;letter-spacing:.5px;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .new-project-edit-image{width:40px;height:40px;flex:0 0 40px;border:0;background:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .new-project-edit-image svg{width:24px;height:24px;display:block;fill:currentColor}
+  .new-project-footer{flex:0 0 auto;padding:28px 30px 0}
+  .sector-map{background-color:#242424}
+  #sectorMap{flex:1 1 0;min-height:0;touch-action:none;}
+  #distanceMap{flex:1 1 0;min-height:0;touch-action:none;}
+  #zoneDistance .setup-footer{padding-bottom:max(24px,env(safe-area-inset-bottom, 0px))}
+  .sector-map>img{z-index:0;filter:none;opacity:1}
+  .sector-map:after{display:block;z-index:1;background-image:linear-gradient(to right,rgba(211,211,196,.384) 1px,transparent 1px),linear-gradient(to bottom,rgba(211,211,196,.384) 1px,transparent 1px);background-size:calc(var(--grid-step-x,var(--grid-step))*var(--sector-zoom,1)) calc(var(--grid-step-y,var(--grid-step))*var(--sector-zoom,1));background-position:50% 50%}
+  .sector-square{position:absolute;z-index:2;left:50%;top:50%;width:calc(var(--square-size)*var(--sector-zoom,1));height:calc(var(--square-size)*var(--sector-zoom,1));transform:translate(-50%,-50%);border:1px solid #ffd400;background:rgba(255,212,0,.12);pointer-events:none}
+  .sector-marker{position:absolute;z-index:3;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);border:1.5px solid #fff;border-radius:50%;background:#ff9500;padding:0;pointer-events:none}
+  .sector-settings{flex:0 0 auto;background:#000;padding:18px 30px 28px}
+  .sector-options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+  .sector-option{height:34px;border:0;border-radius:20px;background:#303033;color:#eee;font-size:14px;cursor:pointer}
+  .sector-option.active{background:#ffcc00;color:#171717}
+  .sector-description{display:flex;align-items:center;gap:18px;margin-bottom:24px;min-height:76px}
+  .sector-type-icon{width:72px;height:72px;flex:0 0 72px;border-radius:12px;background:#303033;display:grid;place-items:center;color:#ddd}
+  .sector-type-icon svg{width:48px;height:48px;fill:none;stroke:currentColor;stroke-width:2}
+  .sector-type-name{font-size:16px;line-height:1.3;color:#eee}
+  .sector-type-size{font-size:13px;color:#85858b;margin-top:5px}
+  .scan-flow-map{flex:1 1 auto;min-height:340px;position:relative;overflow:hidden;background-color:#242424;touch-action:none;cursor:grab}
+  .scan-next-square-hint{display:none;position:absolute;z-index:7;top:18%;left:0;width:100%;min-height:0;padding:0;background:transparent;align-items:center;justify-content:center;pointer-events:none}
+  .scan-next-square-hint.is-visible{display:flex}
+  .scan-next-square-pill{width:min(100%,220px);height:54px;padding:0 22px;border:1px solid #ddd;border-radius:30px;background:#050505;color:#f5f5f7;display:flex;align-items:center;justify-content:center;gap:14px;font-size:17px;line-height:1.2;font-weight:500;white-space:nowrap}
+  .scan-next-square-pill svg{width:30px;height:30px;flex:0 0 30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #scan.scanning .scan-next-square-hint{display:none}
+  .scan-flow-map:active{cursor:grabbing}
+  .scan-flow-map>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:none;opacity:1;pointer-events:none;-webkit-user-drag:none;user-select:none}
+  .scan-grid{display:none;position:absolute;z-index:1;pointer-events:none;background-image:linear-gradient(to right,rgba(120,120,120,.336) 1px,transparent 1px),linear-gradient(to bottom,rgba(120,120,120,.336) 1px,transparent 1px);background-size:var(--grid-step-x,var(--grid-step)) var(--grid-step-y,var(--grid-step));background-position:50% 50%}
+  .scan-cell-highlight{display:none;position:absolute;z-index:2;pointer-events:none;background:rgba(10,132,255,.3);border:2px solid #0a84ff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .scan-history{position:absolute;inset:0;width:100%;height:100%;z-index:2;overflow:visible;pointer-events:none}
+  .scan-link{position:absolute;z-index:2;height:0;border-top:3px dashed #3478f6;transform-origin:left center;pointer-events:none}
+  .scan-location-marker{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);touch-action:none;user-select:none;cursor:grab}
+  .scan-location-marker:active{cursor:grabbing}
+  .scan-user-marker{width:26px;height:26px;padding:0;border:2px solid #fff;border-radius:50%;background:#3478f6}
+  .scan-user-marker:after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
+  .scan-ap{--scan-pin-tip-offset:20.5px;z-index:3;width:26.6px;height:26.6px;padding:0;border:0;border-radius:50%;background:#f04438;color:#fff;display:grid;place-items:center}
+  .scan-ap:after{content:"";position:absolute;top:23.8px;left:11.2px;width:4.2px;height:10px;background:#f04438;clip-path:polygon(0 0,100% 0,100% 78%,50% 100%,0 78%)}
+  .scan-ap svg{width:16.1px;height:16.1px;stroke:currentColor;stroke-width:2;fill:none}
+  .scan-loading-ring{display:none;position:absolute;inset:auto;left:50%;top:50%;width:calc(100% + 16px);height:calc(100% + 16px);transform:translate(-50%,-50%);overflow:visible;pointer-events:none}
+  .scan-loading-ring circle{fill:none;stroke-width:1.5}
+  .scan-loading-ring .track{stroke:rgba(255,255,255,.3)}
+  .scan-loading-ring .progress{stroke:#fff;stroke-linecap:round;transform:rotate(-90deg);transform-origin:20px 20px}
+  #scan.scanning .scan-loading-ring{display:block}
+  #scan.scanning:after{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;background:rgba(255,255,255,.36)}
+  #scan.scanning #scanMap{pointer-events:none}
+  #scan.scanning .scan-ap{--scan-pin-tip-offset:21px;z-index:6;width:28px;height:28px}
+  #scan.scanning .scan-ap:after{top:25px;left:12.5px;width:3px;height:10px}
+  #scan.scanning .scan-ap>svg:first-child{width:18px;height:18px}
+  #scan.scanning .scan-ap .scan-loading-ring{z-index:2;width:32px;height:32px}
+  .scan-stand-still{display:none;position:absolute;z-index:7;top:18%;left:50%;transform:translateX(-50%);min-width:220px;height:54px;padding:0 22px;border:1px solid #ddd;border-radius:30px;background:#050505;color:#f5f5f7;align-items:center;justify-content:center;gap:14px;font-size:17px;white-space:nowrap}
+  .scan-stand-still svg{width:30px;height:30px;fill:currentColor}
+  #scan.scanning .scan-stand-still{display:flex}
+  #scan.scanning .flow-scan-controls #scanBtn{position:relative;z-index:7;display:flex;align-items:center;justify-content:center;background:#050505}
+  .scan-stop-icon{display:none;width:28px;height:28px;border-radius:6px;background:#f04438}
+  #scan.scanning .scan-stop-icon{display:block}
+  #scan.scanning .flow-scan-controls #scanBtn .scan-btn-label{display:none}
+  .scan-flow-footer{flex:0 0 auto;background:#000;padding:18px 30px 26px}
+  .scan-data-count{text-align:center;color:#8d8d93;font-size:14px;margin-bottom:24px}
+  #scanDataCountComplete{white-space:nowrap}
+  #scanDataCountComplete b{color:#f04438;font-weight:500}
+  .flow-scan-controls{display:flex;align-items:center;justify-content:space-between}
+  .flow-scan-controls button{border:0;background:none;color:#fff;font-size:17px;padding:8px 12px;cursor:pointer}
+  .flow-scan-controls #undoScan:disabled{color:#777;cursor:not-allowed}
+  .flow-scan-controls #scanBtn{width:140px;height:56px;border-radius:30px;border:5px solid #888;background:#f33b32;color:white;font-size:20px}
+  .flow-scan-controls #scanBtn:disabled{opacity:.48;cursor:not-allowed}
+  .flow-scan-controls .done-btn{color:#fff}
+  .flow-scan-controls .done-btn:disabled{background:transparent;color:#777;cursor:not-allowed}
+  .scan-area{
+    margin-top:0;height:520px;background:#2a2829;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden
+  }
+  .canvas{
+    width:100%;height:365px;background:#dff0f8;position:relative;overflow:hidden;border-top:1px solid #444;border-bottom:1px solid #444
+  }
+  .floorplan{
+    position:absolute;left:9%;right:9%;top:10%;bottom:10%;
+  }
+  .node{
+    position:absolute;width:20px;height:20px;border-radius:50%;background:#0a84ff;border:5px solid #0a84ff;box-shadow:0 0 0 3px #0a84ff22;
+  }
+  .line-seg{position:absolute;height:3px;background:#0a84ff;transform-origin:left center;border-radius:2px}
+  .ap-marker{
+    position:absolute;width:48px;height:48px;border-radius:50%;background:#ff453a;display:flex;align-items:center;justify-content:center;
+    font-size:22px;left:47%;top:44%;transform:translate(-50%,-50%);box-shadow:0 4px 14px #0006;
+  }
+  .ap-marker:after{content:"";position:absolute;width:4px;height:42px;background:#ff453a;top:42px;border-radius:3px}
+  .scan-footer{padding:12px 14px 20px;position:sticky;bottom:0;background:#000}
+  .coverage{text-align:center;color:#9b989d;font-size:14px;margin-bottom:14px}.coverage b{color:var(--green);font-weight:500}
+  .scan-controls{display:flex;align-items:center;justify-content:space-between}
+  .scan-circle{
+    width:144px;height:55px;border:5px solid #aaa;border-radius:30px;padding:3px;background:#111
+  }
+  .scan-circle button{width:100%;height:100%;border:0;border-radius:25px;background:#ff3b30;color:#fff;font-size:20px}
+  .done-btn,.undo-btn{width:74px;background:none;border:0;font-size:17px}.done-btn{color:var(--blue)}.undo-btn{color:#8d8d8d}
+  .heatmap-screen .nav{border-bottom:0}
+  .heatmap-screen{padding:0 0 max(8px,env(safe-area-inset-bottom));overflow:hidden}
+  .heatmap-screen.active{display:flex;flex-direction:column}
+  .heatmap-screen .nav{flex:0 0 58px;width:100%}
+  .heatmap-top-actions{display:flex;align-items:center;gap:8px}
+  .heatmap-top-actions .icon-btn{width:38px;height:42px;padding:6px;display:grid;place-items:center;color:#e6e6eb}
+  .heatmap-top-actions svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .heatmap-title{max-width:calc(100% - 150px);overflow:hidden;text-overflow:ellipsis}
+  .heatmap-stage{position:relative;flex:1 1 auto;min-height:250px;overflow:hidden;background:#292728;touch-action:none;user-select:none}
+  .heatmap-floor,.heatmap-fallback{position:absolute;display:block;object-fit:fill;pointer-events:none;transform-origin:0 0}
+  .heatmap-fallback{background:#f8f8f8}
+  .heatmap-data-layer{position:absolute;overflow:hidden;touch-action:none;transform-origin:0 0}
+  .heatmap-colors{position:absolute;inset:0;background-repeat:no-repeat;mix-blend-mode:multiply;opacity:.72;filter:blur(24px);pointer-events:none}
+  .heatmap-connections{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+  .heatmap-route{fill:none;stroke:#2878ff;stroke-width:.75;vector-effect:non-scaling-stroke}
+  .heatmap-route.is-preview{stroke-dasharray:1.4 1.1}
+  .heatmap-dot{fill:#3478f6;stroke:#fff;stroke-width:.45;vector-effect:non-scaling-stroke}
+  .heatmap-dot-center{fill:#fff}
+  .heatmap-person{position:absolute;z-index:4;left:50%;top:50%;width:58px;height:auto;transform:translate(-50%,calc(-100% + 10px));display:flex;flex-direction:column;align-items:center;pointer-events:none;touch-action:none}
+  .heatmap-person-value{display:none;position:relative;z-index:2;min-width:40px;padding:3px 7px;border:1px solid #77724f;border-radius:4px;background:#fff4c4;color:#333;font-size:16px;line-height:1.2;text-align:center;box-shadow:0 1px 3px #0003}
+  .heatmap-person.is-extended .heatmap-person-value{display:block}
+  .heatmap-person-value:after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:#fff4c4;border-right:1px solid #77724f;border-bottom:1px solid #77724f;transform:translateX(-50%) rotate(45deg)}
+  .heatmap-person svg{width:54px;height:78px;margin-top:1px;overflow:visible}
+  .heat-person-limbs{fill:none;stroke:#2d291d;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .heat-person-arm-extended,.heat-person-device{display:none}
+  .heatmap-person.is-extended .heat-person-arm-rest{display:none}
+  .heatmap-person.is-extended .heat-person-arm-extended,.heatmap-person.is-extended .heat-person-device{display:block}
+  .heat-person-body{fill:#d7a536;stroke:#332914;stroke-width:1.4;stroke-linejoin:round}
+  .heat-person-head{fill:#f1d77e;stroke:#332914;stroke-width:1.4}
+  .heat-person-device{fill:#222;stroke:#111;stroke-width:1}
+  .heatmap-person.is-dragging svg{transform:scale(1.04)}
+  .heatmap-person.is-dragging .heat-person-arm{stroke-width:2.5}
+  .heatmap-legend{flex:0 0 auto;background:#080808;padding-top:8px}
+  .heatmap-legend .gradient{height:38px;position:relative;overflow:hidden}
+  .heatmap-legend .gradient:after{display:block;left:var(--heatmap-legend-marker,75%);z-index:1}
+  .heatmap-legend .legend-labels{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;font-size:14px;text-shadow:0 1px 2px #0008;pointer-events:none}
+  .heatmap-controls{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:12px;padding:4px 14px 8px;background:#000}
+  .heatmap-metric{height:48px;flex:1 1 0;width:100%;min-width:0;border:0;border-radius:26px;background:#1d1d1f;color:#eee;padding:0 16px;display:flex;align-items:center;justify-content:space-between;font-size:16px;text-align:left}
+  .heatmap-metric span{font-size:24px;line-height:1}
+  .heatmap-settings{width:48px;height:48px;flex:0 0 48px;border:0;border-radius:50%;background:#1d1d1f;color:#eee;display:grid;place-items:center}
+  .heatmap-settings svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+  .heatmap-metric-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .heatmap-metric .heatmap-metric-label{font-size:16px;line-height:normal;flex:1}
+  .metric-picker{position:absolute;inset:0;z-index:45;display:none;flex-direction:column;background:#000;overflow:hidden}
+  .metric-picker.is-open{display:flex}
+  .metric-picker-nav{height:68px;flex:0 0 68px;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid #222}
+  .metric-picker-title{font-size:18px;font-weight:600}
+  .metric-picker-back{position:absolute;left:14px;top:0;height:100%;display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--blue);font-size:17px;padding:0}
+  .metric-picker-back svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  .metric-picker-content{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:18px 16px 30px}
+  .metric-picker-section-title{color:#929296;font-size:14px;margin:10px 8px 12px}
+  .metric-picker-group{background:#1c1c1e;border-radius:16px;overflow:hidden;margin-bottom:28px}
+  .metric-option{width:100%;min-height:64px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:transparent;border:0;border-bottom:1px solid #363638;color:#f5f5f7;text-align:left;font-size:18px;line-height:1.3}
+  .metric-option:disabled{color:#68686f;cursor:not-allowed;opacity:.55}
+  .metric-option:last-child{border-bottom:0}
+  .metric-option-check{flex:0 0 24px;color:var(--blue);font-size:30px;line-height:1;text-align:center;visibility:hidden}
+  .metric-option[aria-checked="true"] .metric-option-check{visibility:visible}
+  .heatmap-settings-nav{justify-content:space-between;padding:0 18px}
+  .heatmap-settings-nav .metric-picker-title{position:absolute;left:50%;transform:translateX(-50%)}
+  .heatmap-settings-done{position:absolute;right:18px;top:0;height:100%;display:flex;align-items:center;border:0;background:none;color:var(--blue);font-size:17px;padding:0;white-space:nowrap}
+  .heatmap-settings-content{width:100%;padding:22px 5.5% 38px}
+  .heatmap-settings-scaled-content{width:100%;min-width:0;zoom:1}
+  .settings-section-title{color:#89898f;font-size:15px;letter-spacing:.35px;margin:10px 14px 12px}
+  .gradient-choice-group{display:flex;align-items:stretch;gap:8px;background:#1c1c1e;border-radius:18px;padding:23px 14px 20px;margin-bottom:30px}
+  .gradient-choice{flex:1;min-width:0;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:17px;padding:0;color:#f5f5f7}
+  .gradient-choice-swatch{width:100%;height:31px;border-radius:5px}
+  .gradient-choice-radio{width:38px;height:38px;border-radius:50%;border:2px solid #eee;display:grid;place-items:center;color:#111;font-size:24px;line-height:1}
+  .gradient-choice[aria-checked="true"] .gradient-choice-radio{background:var(--blue);border-color:var(--blue)}
+  .gradient-choice-radio span{visibility:hidden}.gradient-choice[aria-checked="true"] .gradient-choice-radio span{visibility:visible}
+  .settings-range-card,.settings-map-card{background:#1c1c1e;border-radius:18px;overflow:hidden;margin-bottom:28px}
+  .settings-range-value{display:block;width:82px;height:54px;margin:14px auto 15px;border:1px solid #333338;border-radius:10px;background:#050506;color:#f5f5f7;text-align:center;font-size:24px}
+  .settings-range-row{min-height:82px;padding:12px 22px;display:grid;grid-template-columns:54px 1fr 80px;align-items:center;gap:15px;border-top:1px solid #414145;font-size:20px}
+  .settings-range-row input[type="range"]{width:100%;accent-color:var(--blue)}
+  .settings-range-row .range-end{text-align:right}
+  .settings-map-row{min-height:91px;padding:15px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:1px solid #363638;font-size:20px}
+  .settings-map-row:last-child{border-bottom:0}
+  .settings-toggle{width:72px;height:40px;flex:0 0 72px;border:0;border-radius:22px;background:#4a4a4e;padding:3px;display:flex;align-items:center;justify-content:flex-start}
+  .settings-toggle:before{content:"";width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 2px 5px #0004;transition:transform .16s ease}
+  .settings-toggle[aria-checked="true"]{background:#55c85b}.settings-toggle[aria-checked="true"]:before{transform:translateX(32px)}
+  .settings-sampling{margin-left:auto;max-width:135px;border:0;background:transparent;color:#929296;font-size:19px;text-align:right}
+  .settings-sampling option{background:#1c1c1e;color:#f5f5f7}
+  .settings-reset{width:100%;height:76px;border:0;border-radius:18px;background:#1c1c1e;color:var(--blue);font-size:22px;margin-top:18px}
+  #heatmapStage.hide-survey-path .heatmap-route{display:none}
+  #heatmapStage.hide-sampling-points .heatmap-dot,#heatmapStage.hide-sampling-points .heatmap-dot-center{display:none}
+  #heatmapStage[data-gray-unmeasured="true"] .heatmap-colors{background-color:rgba(145,145,145,.68)}
+  #heatmapStage.hide-floor-plan .heatmap-floor,#heatmapStage.hide-floor-plan .heatmap-fallback{visibility:hidden}
+  .heatmap-wrap{height:730px;background:#292728;position:relative;overflow:hidden}
+  .heatmap-canvas{position:absolute;left:0;right:0;top:205px;height:365px;background:#535353}
+  .heatmap-img{
+    position:absolute;inset:30px 20px 20px;
+    filter:contrast(.85) brightness(.78);
+  }
+  .heat-layer{
+    position:absolute;inset:24px 12px 20px;
+    border-radius:70px;
+    background:
+      radial-gradient(circle at 72% 21%, rgba(52,211,153,.92) 0 16%, rgba(163,230,53,.82) 28%, transparent 46%),
+      radial-gradient(circle at 54% 57%, rgba(250,204,21,.88) 0 19%, rgba(251,146,60,.72) 35%, transparent 55%),
+      radial-gradient(circle at 20% 62%, rgba(248,113,113,.9) 0 20%, rgba(251,146,60,.74) 40%, transparent 60%);
+    mix-blend-mode:screen;
+    opacity:.94;
+    filter:blur(3px);
+  }
+  .heat-nodes{position:absolute;inset:24px 14px}
+  .heat-node{position:absolute;width:19px;height:19px;border-radius:50%;background:#0a84ff;border:4px solid #0a84ff}
+  .heatmap-title{font-size:17px;font-weight:700;white-space:nowrap}
+  .top-x{font-size:34px;line-height:1}
+  .legend{position:absolute;left:0;right:0;bottom:70px}
+  .gradient{height:24px;background:linear-gradient(90deg,#2c5fff,#08bde8,#18dd89,#79ed00,#ffd400,#ff8d2b,#ff453a);position:relative}
+  .gradient:after{content:"";position:absolute;left:69%;top:0;bottom:0;width:2px;background:#fff}
+  .legend-labels{display:flex;justify-content:space-between;padding:6px 14px;color:#fff;font-size:14px}
+  .metric{position:absolute;left:45px;right:45px;bottom:8px;height:44px;background:#1d1d1f;border-radius:22px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;font-size:18px}
+  .small-round{position:absolute;right:8px;bottom:8px;width:44px;height:44px;border-radius:22px;background:#1d1d1f;border:0;color:#fff}
+  .float-value{position:absolute;left:44%;top:40%;background:#d9efff;color:#333;padding:1px 5px;border-radius:4px;font-size:13px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:#232323;border:1px solid #3b3b3b;border-radius:14px;padding:8px 10px;color:#ddd;font-size:13px}
+  .project-name-row{display:flex;align-items:center;gap:12px;flex:1;min-height:40px;font-size:18px;font-weight:600;cursor:text}
+  .project-name-row span[role="button"]{cursor:text;border-radius:3px}
+  .project-name-row span[role="button"]:focus-visible{outline:none}
+  .project-name-row span[contenteditable="true"]{outline:none;background:transparent;box-shadow:none;color:inherit;caret-color:#fff}
+  #projectDescription{cursor:text;border-radius:3px;min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  #projectDescription:focus-visible{outline:none}
+  .project-description-edit{box-sizing:border-box;display:block;flex:1 1 auto;width:100%;min-width:0;height:82px;min-height:82px;resize:none;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;background:transparent;color:inherit;border:0;outline:none;box-shadow:none;border-radius:0;margin:0;padding:0;font:inherit;line-height:normal;vertical-align:top;caret-color:#fff}
+  .project-rfid-icon{width:29.1px;height:29.1px;flex:0 0 29.1px;padding:3px;border-radius:50%;background:#fff;color:#000}
+  .bottom-space{height:20px}
+
+  /* Real map / floor icons */
+  .inline-map-icon{
+    width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+    flex:0 0 22px;color:currentColor;vertical-align:middle;
+  }
+  .inline-map-icon svg{width:100%;height:100%;display:block}
+  .btn-map-icon{
+    width:22px;height:22px;display:inline-block;vertical-align:-5px;margin-right:7px;
+  }
+  .resume-icon{width:27px;height:27px;vertical-align:-6px;margin-right:8px;transform:rotate(-50deg)}
+  .structure-icon{
+    width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+    flex:0 0 22px;color:#fff;
+  }
+  .structure-icon svg{width:20px;height:20px;display:block;color:#fff;opacity:1}
+  .zone-icon svg{width:16px;height:16px;display:block;color:#fff;opacity:1}
+  .structure-icon svg [stroke],.zone-icon svg [stroke]{stroke:#fff!important;stroke-opacity:1!important;stroke-width:1.8!important}
+  .zone-icon{
+    width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+    flex:0 0 18px;color:#fff;
+  }
+  .zone-icon svg{width:16px;height:16px;display:block}
+
+  .product-home{padding:0 16px 36px}
+  .product-home-title{margin:98px 0 50px;text-align:center;font-size:25px;line-height:1.2;font-weight:750;letter-spacing:-.4px}
+  .product-card{position:relative;width:100%;min-height:142px;margin:0 0 24px;padding:25px 24px;border:1px solid #343438;border-radius:19px;background:#1c1c1e;display:flex;align-items:center;gap:20px;text-align:left;cursor:pointer;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .product-card:active{background:#252528}
+  .product-icon{width:62px;height:62px;flex:0 0 62px;border-radius:18px;display:grid;place-items:center;box-shadow:inset 0 1px 0 #ffffff24}
+  .product-icon.wifi{background:linear-gradient(145deg,#398cff,#2056db)}
+  .product-icon.rfid{background:linear-gradient(145deg,#64dfb3,#35a88e)}
+  .product-icon svg{width:44px;height:44px;display:block}
+  .product-icon.rfid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+  .rfid-wordmark{color:#153d39;font-size:11px;line-height:1;font-weight:800;letter-spacing:-.5px}
+  .product-icon.rfid svg{width:40px;height:40px}
+  .product-copy{min-width:0;display:block}
+  .product-name{display:block;font-size:18px;line-height:1.25;font-weight:500;margin-bottom:8px}
+  .product-description{display:block;color:#929297;font-size:13px;line-height:1.35}
+  @media(max-width:380px){.product-home-title{margin-top:78px;margin-bottom:40px}.product-card{padding:20px 16px;gap:14px;min-height:128px}.product-icon{width:54px;height:54px;flex-basis:54px}.product-name{font-size:17px}.product-description{font-size:12px}}
+
+  @media(max-width:380px){
+    .grid{gap:12px}.thumb{height:165px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- PRODUCT SELECTOR -->
+  <section class="screen" id="productHome">
+    <div class="product-home">
+      <h1 class="product-home-title">Welcome to ABSS</h1>
+      <button class="product-card" type="button" data-product="wifi">
+        <span class="product-icon wifi" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="5" y="11" width="38" height="31" rx="6" fill="#f4f5f7"/><path d="M5 28h38v8a6 6 0 0 1-6 6H11a6 6 0 0 1-6-6Z" fill="#dfe2e7"/><path d="M5 28h38" stroke="#c7cbd1" stroke-width="1"/><path d="M24 6c-7 0-12 5-12 12 0 8 12 19 12 19s12-11 12-19C36 11 31 6 24 6Z" fill="#f04d4d"/><path d="M17.5 16.5q6.5-6 13 0M20.5 19.5q3.5-3.3 7 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="24" cy="22.5" r="1.5" fill="#fff"/></svg></span>
+        <span class="product-copy"><span class="product-name">WiFi Heatmaps</span><span class="product-description">Deep analysis and troubleshooting of WiFi networks with color-coded visual heatmaps.</span></span>
+      </button>
+      <button class="product-card" type="button" data-product="rfid">
+        <span class="product-icon rfid" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="#111" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="2.8" fill="#111" stroke="none"/><path d="M20 18C14 20 14 28 20 30M28 18C34 20 34 28 28 30M18 10C9 16 9 32 18 38M30 10C39 16 39 32 30 38M13 5C1 14 1 34 13 43M35 5C47 14 47 34 35 43"/></svg><span class="rfid-wordmark">RFID</span></span>
+        <span class="product-copy"><span class="product-name">RFID Heatmaps</span><span class="product-description">Visualize RFID signal strength and reader coverage across your floor plan.</span></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="screen active" id="projects">
+    <div class="nav">
+      <div class="left"><button class="link" id="projectsBack" type="button" aria-label="Back" title="Back"><svg class="back-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button></div>
+      <h1>Projects</h1>
+    </div>
+    <div class="content">
+      <div class="search"><svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.8 3.8a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM16 16l5 5"/></svg><input id="searchInput" placeholder="Search" /></div>
+      <div class="section-row">
+        <button class="sort-btn" id="sortOpen">Project name <span id="sortDirectionToggle" style="color:#aaa">| Z → A</span></button>
+        <button class="view-btn" id="toggleView" aria-label="Switch to list view"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="5" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="19" r="1.5" fill="currentColor"/><path d="M9 5h12M9 12h12M9 19h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      </div>
+
+      <div class="grid" id="gridView">
+        <div class="project-card" id="newProjectCard">
+          <div class="thumb add"><svg class="add-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8v32M8 24h32"/></svg></div>
+          <div class="name">New project</div>
+        </div>
+      </div>
+
+      <div class="list" id="listView">
+        <div class="list-row" id="newProjectRow">
+          <div class="mini-thumb"><svg class="add-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8v32M8 24h32"/></svg></div>
+          <div class="meta"><b>New project</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT DETAIL -->
+  <section class="screen" id="detail">
+    <div class="nav">
+      <div class="left"><button class="link go-projects"><svg class="back-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Projects</button></div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-thumb">
+        <svg class="floor-svg" viewBox="0 0 100 100" aria-hidden="true">
+          <rect x="7" y="7" width="86" height="86" rx="4" fill="#f6f6f6" stroke="#222" stroke-width="5"/>
+          <path d="M7 53h34V32h22V7M41 53v40M63 7v34h30M63 41v52M63 70h30" fill="none" stroke="#222" stroke-width="5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 id="detailTitle">Warehouse A - RFID Survey</h2>
+      <div class="date" id="detailDate">24 Sep 2026</div>
+      <button class="link" id="editProjectFloorPlan" type="button">Add / change floor plan</button>
+    </div>
+
+    <div class="top-action">
+      <button class="primary-btn" id="showHeatmap">
+        <svg class="btn-map-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3.5 6.5 9 4l6 2.2L20.5 4v13.5L15 20l-6-2.2-5.5 2.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M9 4v13.8M15 6.2V20" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        </svg>
+        <span id="heatmapActionLabel">RFID Heatmaps</span>
+      </button>
+      <div class="helper">Visualize RFID signal strength and reader coverage across your floor plan.</div>
+      <button class="secondary-btn" id="resumeScan"><svg class="resume-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 1 1-2.4-5.7L20 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Resume scanning</button>
+      <div class="helper">Continue your survey, add or edit RFID measurement points to improve map coverage.</div>
+    </div>
+
+    <div class="details-pad">
+      <div class="section-title">PROJECT NAME</div>
+      <div class="card">
+        <div class="row"><div class="project-name-row"><svg class="project-rfid-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 10C7 23 7 51 24 64M35 21c-9 8-9 22 0 30M76 10c17 13 17 41 0 54M65 21c9 8 9 22 0 30" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="40" r="6" fill="currentColor"/><path d="M47 46 37 91h26L53 46Z" fill="currentColor"/></svg><span role="button" tabindex="0" aria-label="Edit project name" title="Click to edit project name">Warehouse A - RFID Survey</span></div></div>
+      </div>
+
+      <div class="section-title">PROJECT STRUCTURE</div>
+      <div class="card structure-list">
+        <div id="projectZoneRows"></div>
+        <div class="row add-zone-row"><button class="blue add-zone-button" id="addZoneButton" type="button">Add Zone</button></div>
+      </div>
+
+      <div class="section-title">PROJECT DETAILS</div>
+      <div class="card">
+        <div class="row"><div class="label"><div class="sub">RFID Reader</div>Fixed UHF Reader</div></div>
+        <div class="row"><div class="label"><div class="sub">Frequency</div>920–925 MHz</div></div>
+        <div class="row"><div class="label"><div class="sub">Measurement metric</div>RSSI (dBm)</div></div>
+        <div class="row"><div class="label"><div class="sub">Last opened</div>24 Sep 2026</div></div>
+      </div>
+
+      <div class="section-title">DESCRIPTION</div>
+      <div class="card"><div class="row" id="projectDescription" role="button" tabindex="0" aria-label="Edit project description" title="Click to edit description" style="min-height:110px;align-items:flex-start;color:#aaa">RFID coverage survey for reader and antenna placement.</div></div>
+      <button class="delete">Delete project</button>
+    </div>
+  </section>
+
+  <!-- NEW PROJECT DETAILS -->
+  <section class="screen new-project-screen" id="newProjectDetails">
+    <div class="new-project-header">
+      <button class="new-project-cancel" id="cancelNewProject">Cancel</button>
+      <h1>New project</h1>
+    </div>
+    <div class="new-project-fields">
+      <input class="new-project-name" id="newProjectName" type="text" value="Project 1" aria-label="Project name" />
+      <textarea class="new-project-description" id="newProjectDescription" placeholder="Description" aria-label="Description"></textarea>
+    </div>
+    <div class="new-project-spacer"></div>
+    <div class="new-project-image-row">
+      <img id="newProjectPreview" alt="Selected floor plan" />
+      <div class="new-project-file-name" id="newProjectFileName"></div>
+      <button class="new-project-edit-image" id="editNewProjectImage" type="button" aria-label="Change floor-plan image" title="Change floor-plan image"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Zm17.71-10.04a1 1 0 0 0 0-1.42l-2.5-2.5a1 1 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 2-1.66Z"/></svg></button>
+    </div>
+    <div class="new-project-footer"><button class="wizard-continue" id="newProjectContinue">Continue…</button></div>
+  </section>
+
+  <!-- NEW ZONE: DISTANCE CALIBRATION -->
+  <section class="screen zone-setup" id="zoneDistance">
+    <div class="setup-header"><button class="setup-close" id="distanceBack" aria-label="Back">×</button><h1>New Zone 1 • #1 Sep 24, 2026</h1></div>
+    <div class="setup-progress"><span style="width:25%"></span></div>
+    <div class="setup-hint">Choose two points on map and enter the actual distance between</div>
+    <div class="wizard-map distance-map" id="distanceMap">
+      <img id="distanceFloorImage" alt="" />
+      <div class="distance-halo start"></div><div class="distance-halo end"></div>
+      <div class="distance-line" id="distanceLine"></div>
+      <button class="distance-point start" data-point="start" aria-label="Move first distance point"></button>
+      <button class="distance-point end" data-point="end" aria-label="Move second distance point"></button>
+      <label class="distance-chip"><span class="distance-chip-label">Distance</span><input id="distanceValue" type="text" inputmode="decimal" enterkeyhint="done" value="14.5" aria-label="Distance in meters" autocomplete="off" /><span id="distanceChipUnit" role="button" tabindex="0" aria-label="Distance unit: m. Activate to switch units" title="Switch m / ft"><span data-unit="m" class="active">m</span><span aria-hidden="true">/</span><span data-unit="ft">ft</span></span></label>
+    </div>
+    <div class="setup-footer"><button class="wizard-continue" id="distanceContinue">Continue…</button></div>
+  </section>
+
+  <!-- NEW ZONE: SECTOR SIZE -->
+  <section class="screen zone-setup" id="zoneSize">
+    <div class="setup-header"><button class="setup-close" id="sectorBack" aria-label="Back">×</button><h1>New Zone 1 • #1 Sep 24, 2026</h1></div>
+    <div class="setup-progress"><span style="width:50%"></span></div>
+    <div class="setup-hint">The sector size dictates how often the measurements are to be</div>
+    <div class="wizard-map sector-map" id="sectorMap" data-size="Small" style="--grid-step:20px;--grid-half:10px;--square-size:20px">
+      <img id="sectorFloorImage" alt="" />
+      <div class="sector-square" id="sectorSquare"></div><div class="sector-marker" id="sectorMarker" aria-label="Sector center point"></div>
+    </div>
+    <div class="sector-settings">
+      <div class="sector-options">
+        <button class="sector-option active" data-size="Small">Small</button>
+        <button class="sector-option" data-size="Medium">Medium</button>
+        <button class="sector-option" data-size="Large">Large</button>
+        <button class="sector-option" data-size="XL">XL</button>
+      </div>
+      <div class="sector-description">
+        <div class="sector-type-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 22 24 8l19 14M10 20v22h28V20M19 42V28h10v14M17 21h.1M31 21h.1" stroke-linecap="square"/></svg></div>
+        <div><div class="sector-type-name" id="sectorTypeName">Small Space (e.g. Studio Apartment)</div><div class="sector-type-size" id="sectorTypeSize">Sector size: 1.0 x 1.0 m</div></div>
+      </div>
+      <button class="wizard-continue" id="zoneContinue">Continue…</button>
+    </div>
+  </section>
+
+  <!-- NEW ZONE: RFID SCAN -->
+  <section class="screen zone-setup" id="scan">
+    <div class="setup-header"><button class="setup-close" id="scanBack" aria-label="Back">×</button><h1 id="scanTitle">New Zone 1 • #1 Sep 24, 2026</h1></div>
+    <div class="setup-progress"><span style="width:75%"></span></div>
+    <div class="scan-next-square-hint" id="scanNextSquareHint" role="status" aria-live="polite" aria-hidden="true"><div class="scan-next-square-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 22V16.9612C14 16.3537 13.7238 15.7791 13.2494 15.3995L11.5 14M11.5 14L13 7.5M11.5 14L10 13M13 7.5L11 7M13 7.5L15.0426 10.7681C15.3345 11.2352 15.8062 11.5612 16.3463 11.6693L18 12M10 13L11 7M10 13L9.40011 16.2994C9.18673 17.473 8.00015 18.2 6.85767 17.8573L4 17M11 7L8.10557 8.44721C7.428 8.786 7 9.47852 7 10.2361V12M14.5 3.5C14.5 4.05228 14.0523 4.5 13.5 4.5C12.9477 4.5 12.5 4.05228 12.5 3.5C12.5 2.94772 12.9477 2.5 13.5 2.5C14.0523 2.5 14.5 2.94772 14.5 3.5Z"/></svg><span>Go to next square</span></div></div>
+    <div class="scan-flow-map" id="scanMap" style="--grid-step:20px"><img id="scanFloorImage" alt="" draggable="false" /><div class="scan-grid" id="scanGrid" aria-hidden="true"></div><svg class="scan-history" id="scanHistory" aria-hidden="true"></svg><div id="scanLink" class="scan-link"></div><div class="scan-location-marker scan-user-marker" id="scanUserMarker" aria-label="User location"></div><button type="button" class="scan-location-marker scan-ap" id="scanWifiMarker" aria-label="Move Wi-Fi marker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9a10 10 0 0 1 14 0M8 12a6 6 0 0 1 8 0M11 15a2 2 0 0 1 2 0" stroke-linecap="round"/></svg><svg class="scan-loading-ring" viewBox="0 0 40 40" aria-hidden="true"><circle class="track" cx="20" cy="20" r="17"/><circle class="progress" cx="20" cy="20" r="17"/></svg></button><div class="scan-stand-still"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 15V7a2 2 0 0 1 4 0v7-9a2 2 0 0 1 4 0v9-7a2 2 0 0 1 4 0v9-5a2 2 0 0 1 4 0v9c0 7-4 11-10 11h-2c-3 0-5-1-7-4l-5-7a2.4 2.4 0 0 1 3.7-3l3.3 3z"/></svg><span>Stand still...</span></div></div>
+    <div class="scan-flow-footer">
+      <div class="scan-data-count" id="scanDataCount" aria-live="polite"><span id="scanDataCountProgress"><span id="pointCount">0</span> out of <span id="pointLimit">25</span> data points</span><span id="scanDataCountComplete" hidden></span></div>
+      <div class="flow-scan-controls"><button id="undoScan">Undo</button><button id="scanBtn" aria-label="Start scan"><span class="scan-btn-label">Scan</span><span class="scan-stop-icon" aria-hidden="true"></span></button><button class="done-btn go-detail">Done</button></div>
+    </div>
+  </section>
+
+  <!-- HEATMAP -->
+  <section class="screen heatmap-screen" id="heatmap">
+    <div class="nav">
+      <div class="left"><button class="link go-detail top-x" aria-label="Close heatmap">×</button></div>
+      <div class="heatmap-title" id="heatmapTitle">Ground Floor • Zone A • Sep 24, 2026</div>
+      <div class="right heatmap-top-actions">
+        <button class="icon-btn" id="shareHeatmap" aria-label="Share heatmap"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="m8.2 10.8 7.5-4.6M8.2 13.2l7.5 4.6"/></svg></button>
+        <button class="icon-btn" id="resetHeatmap" aria-label="Reset heatmap view"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0 2 5M20 4v7h-7"/></svg></button>
+      </div>
+    </div>
+    <div class="heatmap-stage" id="heatmapStage" aria-label="RFID signal heatmap; drag to inspect a location">
+      <svg class="heatmap-fallback" id="heatmapFallback" viewBox="0 0 600 430" aria-hidden="true">
+        <rect width="600" height="430" fill="#f8f8f8"/>
+        <g fill="none" stroke="#252525" stroke-width="10" stroke-linejoin="miter">
+          <path d="M25 25h280v120h80V25h190v380H365V300H285v105H25z"/>
+          <path d="M25 225h190v80H25M305 145v155M385 145h190M215 225h70M365 300h210"/>
+        </g>
+        <g fill="none" stroke="#aaa" stroke-width="2"><path d="M45 50h90v80H45zM155 50h100v70M410 50h145v75M410 170h145v95M45 330h190M400 330h150"/></g>
+      </svg>
+      <img class="heatmap-floor" id="heatmapFloorImage" alt="Floor plan heatmap" draggable="false" />
+      <div class="heatmap-data-layer" id="heatmapDataLayer">
+        <div class="heatmap-colors" id="heatmapColors"></div>
+        <svg class="heatmap-connections" id="heatmapConnections" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+      <div class="heatmap-person" id="heatmapPerson" aria-label="Signal strength at selected location">
+        <div class="heatmap-person-value" id="heatmapValue">75</div>
+        <svg viewBox="0 0 64 92" aria-hidden="true">
+          <g class="heat-person-limbs">
+            <path d="M29 25v5M35 25v5M23 33l-3 8 1 8"/>
+            <path d="M41 33l3 8-1 8" class="heat-person-arm heat-person-arm-rest"/>
+            <path d="M41 33l7-7 6-11" class="heat-person-arm heat-person-arm-extended"/>
+            <path d="M26 54 22 80M38 54 42 80"/>
+          </g>
+          <circle class="heat-person-head" cx="32" cy="16" r="8"/>
+          <path class="heat-person-body" d="M24 29Q32 25 40 29L44 52Q32 57 20 52Z"/>
+          <rect class="heat-person-device" x="52" y="8" width="7" height="12" rx="1.5"/>
+        </svg>
+      </div>
+    </div>
+    <div class="heatmap-legend">
+      <div class="gradient" id="heatmapGradient"><div class="legend-labels"><span id="heatmapLegendMin">0 Mbps</span><span id="heatmapLegendMax">100 Mbps</span></div></div>
+    </div>
+    <div class="heatmap-controls">
+      <button class="heatmap-metric" id="heatmapMetricButton" type="button" aria-label="Choose heatmap metric"><span class="heatmap-metric-label" id="heatmapMetricLabel">Download speed</span><span aria-hidden="true">›</span></button>
+      <button class="heatmap-settings" id="heatmapSettings" type="button" aria-label="Heatmap display settings">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="8" cy="6" r="2" fill="#1d1d1f"/><circle cx="15" cy="12" r="2" fill="#1d1d1f"/><circle cx="11" cy="18" r="2" fill="#1d1d1f"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="metric-picker" id="heatmapMetricPicker" aria-label="Heatmap metrics" aria-hidden="true">
+    <div class="metric-picker-nav">
+      <button class="metric-picker-back" id="heatmapMetricBack" type="button" aria-label="Back to heatmap"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>Back</button>
+      <div class="metric-picker-title">Heatmaps</div>
+    </div>
+    <div class="metric-picker-content">
+      <div class="metric-picker-section-title">NetSpot for iPhone &amp; iPad</div>
+      <div class="metric-picker-group">
+        <button class="metric-option" type="button" data-metric="Download speed" aria-checked="true" role="radio"><span>Download speed</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Upload speed" aria-checked="false" role="radio"><span>Upload speed</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+      </div>
+      <div class="metric-picker-section-title">Wireless network metrics</div>
+      <div class="metric-picker-group" role="radiogroup" aria-label="Wireless network metrics">
+        <button class="metric-option" type="button" data-metric="Signal level" aria-checked="false" role="radio"><span>Signal level</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Signal-to-interference ratio" aria-checked="false" role="radio"><span>Signal-to-interference ratio</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Signal-to-noise ratio" aria-checked="false" role="radio"><span>Signal-to-noise ratio</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Noise level" aria-checked="false" role="radio"><span>Noise level</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Quantity of access points" aria-checked="false" role="radio"><span>Quantity of access points</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="PHY mode (a/b/g/n/ac/ax/be) coverage" aria-checked="false" role="radio"><span>PHY mode (a/b/g/n/ac/ax/be) coverage</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Wireless transmit rate" aria-checked="false" role="radio"><span>Wireless transmit rate</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Iperf TCP download speed" aria-checked="false" role="radio"><span>Iperf TCP download speed</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Iperf TCP upload speed" aria-checked="false" role="radio"><span>Iperf TCP upload speed</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Iperf UDP download speed" aria-checked="false" role="radio"><span>Iperf UDP download speed</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Iperf UDP upload speed" aria-checked="false" role="radio"><span>Iperf UDP upload speed</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Iperf UDP jitter" aria-checked="false" role="radio"><span>Iperf UDP jitter</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Issues with SNR" aria-checked="false" role="radio"><span>Issues with SNR</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Overlapping channels (SIR)" aria-checked="false" role="radio"><span>Overlapping channels (SIR)</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Low signal level" aria-checked="false" role="radio"><span>Low signal level</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="High level of noise" aria-checked="false" role="radio"><span>High level of noise</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Low download rate" aria-checked="false" role="radio"><span>Low download rate</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Low upload rate" aria-checked="false" role="radio"><span>Low upload rate</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Frequency band coverage" aria-checked="false" role="radio"><span>Frequency band coverage</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Low secondary signal level" aria-checked="false" role="radio"><span>Low secondary signal level</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+        <button class="metric-option" type="button" data-metric="Secondary signal level" aria-checked="false" role="radio"><span>Secondary signal level</span><span class="metric-option-check" aria-hidden="true">✓</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="metric-picker heatmap-settings-panel" id="heatmapSettingsPanel" aria-label="Heatmap settings" aria-hidden="true">
+    <div class="metric-picker-nav heatmap-settings-nav">
+      <button class="metric-picker-back" id="heatmapSettingsBack" type="button">Back</button>
+      <div class="metric-picker-title">Settings</div>
+      <button class="heatmap-settings-done" id="heatmapSettingsDone" type="button">Done</button>
+    </div>
+    <div class="metric-picker-content heatmap-settings-content">
+      <div class="heatmap-settings-scaled-content">
+      <div class="settings-section-title">GRADIENT TYPE</div>
+      <div class="gradient-choice-group" role="radiogroup" aria-label="Gradient type">
+        <button class="gradient-choice" type="button" data-gradient="spectrum" role="radio" aria-checked="true" aria-label="Spectrum gradient">
+          <span class="gradient-choice-swatch" style="background:linear-gradient(90deg,#2c5fff,#08bde8,#18dd89,#79ed00,#ffd400,#ff8d2b,#ff453a)"></span><span class="gradient-choice-radio"><span>✓</span></span>
+        </button>
+        <button class="gradient-choice" type="button" data-gradient="warm" role="radio" aria-checked="false" aria-label="Warm to green gradient">
+          <span class="gradient-choice-swatch" style="background:linear-gradient(90deg,#f04438,#ffb52e,#f4dc3a,#5bc84a)"></span><span class="gradient-choice-radio"><span>✓</span></span>
+        </button>
+        <button class="gradient-choice" type="button" data-gradient="cool" role="radio" aria-checked="false" aria-label="Blue to red gradient">
+          <span class="gradient-choice-swatch" style="background:linear-gradient(90deg,#234fff,#3689e7,#778eae,#c46c72,#ed453d)"></span><span class="gradient-choice-radio"><span>✓</span></span>
+        </button>
+      </div>
+
+      <div class="settings-section-title" id="minSpeedTitle">MIN DOWNLOAD SPEED, MBPS</div>
+      <div class="settings-range-card">
+        <input class="settings-range-value" id="minSpeedValue" type="number" value="0" aria-label="Minimum metric value" />
+        <div class="settings-range-row"><span class="range-end" id="minSpeedLower">0</span><input id="minSpeedSlider" type="range" min="0" max="1000" value="0" aria-label="Minimum metric slider" /><span class="range-end" id="minSpeedUpper">1000</span></div>
+      </div>
+
+      <div class="settings-section-title" id="maxSpeedTitle">MAX DOWNLOAD SPEED, MBPS</div>
+      <div class="settings-range-card">
+        <input class="settings-range-value" id="maxSpeedValue" type="number" value="100" aria-label="Maximum metric value" />
+        <div class="settings-range-row"><span class="range-end" id="maxSpeedLower">0</span><input id="maxSpeedSlider" type="range" min="0" max="1000" value="100" aria-label="Maximum metric slider" /><span class="range-end" id="maxSpeedUpper">1000</span></div>
+      </div>
+
+      <div class="settings-section-title">MAP SETTINGS</div>
+      <div class="settings-map-card">
+        <div class="settings-map-row"><span>Floor plan</span><button class="settings-toggle" type="button" role="switch" data-setting="floorPlan" aria-label="Floor plan" aria-checked="true"></button></div>
+        <div class="settings-map-row"><span>Survey path</span><button class="settings-toggle" type="button" role="switch" data-setting="surveyPath" aria-label="Survey path" aria-checked="true"></button></div>
+        <label class="settings-map-row" for="samplingMode"><span>Sampling points</span><select class="settings-sampling" id="samplingMode" aria-label="Sampling points detail"><option>Simple</option><option>Detailed</option><option>All</option></select></label>
+        <div class="settings-map-row"><span>Gray out unmeasured area</span><button class="settings-toggle" type="button" role="switch" data-setting="grayUnmeasured" aria-label="Gray out unmeasured area" aria-checked="true"></button></div>
+      </div>
+      <button class="settings-reset" id="heatmapSettingsReset" type="button">RESET</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL SHEETS -->
+  <div class="sheet-backdrop" id="newProjectSheet">
+    <div class="sheet">
+      <div class="sheet-card">
+        <div class="sheet-title">Create new RFID survey project</div>
+        <button id="createFromImage">Add existing floor-plan image…</button>
+        <button id="createFromPhoto">Take a new photo of a floor plan…</button>
+      </div>
+      <div class="sheet-card"><button class="cancel sheet-close">Cancel</button></div>
+    </div>
+  </div>
+  <input id="floorPlanFile" type="file" accept="image/*" hidden />
+  <input id="floorPlanCamera" type="file" accept="image/*" capture="environment" hidden />
+
+  <div class="sheet-backdrop" id="replaceImageSheet">
+    <div class="sheet">
+      <div class="sheet-card">
+        <button id="replaceFromImage">Add existing photo of a map…</button>
+        <button id="replaceFromPhoto">Take a new photo of a map…</button>
+      </div>
+      <div class="sheet-card"><button class="cancel sheet-close">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="sortSheet">
+    <div class="sheet">
+      <div class="sheet-card">
+        <div class="sheet-title">Sort by</div>
+        <button class="sort-choice active" data-sort="Project name">Project name | Z → A</button>
+        <button class="sort-choice" data-sort="Date created">Date created</button>
+        <button class="sort-choice" data-sort="Date modified">Date modified</button>
+        <button class="sort-choice" data-sort="Last opened">Last opened</button>
+      </div>
+      <div class="sheet-card"><button class="cancel sheet-close">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="projectActionSheet">
+    <div class="sheet project-action-sheet">
+      <div class="sheet-card">
+        <button id="resumeProjectScan" class="resume-action">Resume scanning</button>
+        <button id="deleteProjectAction" class="delete-action">Delete project</button>
+      </div>
+      <div class="sheet-card"><button class="cancel sheet-close">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="zoneActionSheet">
+    <div class="sheet">
+      <div class="sheet-card">
+        <div class="sheet-title" id="zoneActionTitle">Zone actions</div>
+        <button id="renameZoneAction" type="button">Rename</button>
+        <button id="duplicateZoneAction" type="button">Duplicate</button>
+        <button id="addSnapshotAction" type="button">Add new snapshot</button>
+        <button id="removeZoneAction" class="delete-action" type="button">Remove</button>
+      </div>
+      <div class="sheet-card"><button class="cancel sheet-close" type="button">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="addZoneSheet">
+    <div class="sheet">
+      <div class="sheet-card">
+        <div class="sheet-title">Add new zone to project</div>
+        <button id="addZoneFromExistingMap" type="button">Add existing photo of a map…</button>
+        <button id="addZoneFromNewPhoto" type="button">Take a new photo of a map…</button>
+      </div>
+      <div class="sheet-card"><button class="cancel sheet-close" type="button">Cancel</button></div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop delete-confirm-backdrop" id="deleteConfirmSheet">
+    <div class="sheet delete-confirm-sheet">
+      <div class="delete-confirm-card">
+        <div class="delete-confirm-title">Delete the project?</div>
+        <div class="delete-confirm-actions">
+          <button id="cancelProjectDelete" class="confirm-no">No</button>
+          <button id="confirmProjectDelete" class="confirm-yes">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop discard-confirm-backdrop" id="discardProjectConfirmSheet">
+    <div class="sheet discard-confirm-sheet">
+      <div class="discard-confirm-card">
+        <div class="discard-confirm-title">Discard new project</div>
+        <div class="discard-confirm-message">Are you sure you want to cancel the creation of a new project?</div>
+        <div class="discard-confirm-actions">
+          <button id="keepNewProject" class="discard-no">No</button>
+          <button id="confirmDiscardNewProject" class="discard-yes">Yes, Discard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const screens = [...document.querySelectorAll('.screen')];
+const lastViewStorageKey='rfidHeartmapLastView';
+let restoringLastView=false;
+let activeProductType='rfid';
+function productStorageKey(rfidKey){return activeProductType==='wifi'?`wifiHeatmap${rfidKey.replace(/^rfidHeartmap/, '')}`:rfidKey}
+function getDefaultHeatmapMetric(){return activeProductType==='wifi'?'Download speed':'Signal level'}
+let heatmapDisplaySettings={gradient:'spectrum',min:0,max:100,floorPlan:true,surveyPath:true,samplingMode:'Simple',grayUnmeasured:true};
+function getHeatmapMetricRange(metric=selectedHeatmapMetric){
+  if(['Signal level','Noise level','Low signal level','Low secondary signal level','Secondary signal level'].includes(metric)) return {min:-100,max:-30,defaultMin:-100,defaultMax:-30,unit:'dBm'};
+  if(['Signal-to-interference ratio','Signal-to-noise ratio','Overlapping channels (SIR)'].includes(metric)) return {min:-20,max:60,defaultMin:-20,defaultMax:60,unit:'dB'};
+  if(metric==='Iperf UDP jitter') return {min:0,max:100,defaultMin:0,defaultMax:100,unit:'ms'};
+  if(metric==='Quantity of access points') return {min:0,max:1000,defaultMin:0,defaultMax:20,unit:'APs'};
+  if(['PHY mode (a/b/g/n/ac/ax/be) coverage','Frequency band coverage','Issues with SNR','High level of noise'].includes(metric)) return {min:0,max:100,defaultMin:0,defaultMax:100,unit:'%'};
+  return {min:0,max:1000,defaultMin:0,defaultMax:100,unit:'Mbps'};
+}
+function loadHeatmapDisplaySettings(){
+  const range=getHeatmapMetricRange();
+  const defaults={gradient:'spectrum',min:range.defaultMin,max:range.defaultMax,floorPlan:true,surveyPath:true,samplingMode:'Simple',grayUnmeasured:true};
+  try{
+    const saved=JSON.parse(localStorage.getItem(productStorageKey('rfidHeartmapDisplaySettings'))||'{}');
+    heatmapDisplaySettings={...defaults,...saved};
+  }catch(error){heatmapDisplaySettings=defaults}
+  if(!['spectrum','warm','cool'].includes(heatmapDisplaySettings.gradient)) heatmapDisplaySettings.gradient='spectrum';
+  if(!['Simple','Detailed','All'].includes(heatmapDisplaySettings.samplingMode)) heatmapDisplaySettings.samplingMode='Simple';
+  heatmapDisplaySettings.min=Math.max(range.min,Math.min(range.max,Number(heatmapDisplaySettings.min)));
+  heatmapDisplaySettings.max=Math.max(range.min,Math.min(range.max,Number(heatmapDisplaySettings.max)));
+  if(!Number.isFinite(heatmapDisplaySettings.min)||!Number.isFinite(heatmapDisplaySettings.max)||heatmapDisplaySettings.min>=heatmapDisplaySettings.max){
+    heatmapDisplaySettings.min=range.defaultMin;
+    heatmapDisplaySettings.max=range.defaultMax;
+  }
+}
+function saveHeatmapDisplaySettings(){
+  try{localStorage.setItem(productStorageKey('rfidHeartmapDisplaySettings'),JSON.stringify(heatmapDisplaySettings))}catch(error){}
+}
+function updateHeatmapMetricAvailability(){
+  document.querySelectorAll('.metric-option').forEach(option=>{
+    option.disabled=activeProductType==='wifi'&&option.dataset.metric!=='Download speed';
+  });
+}
+function getCreatedProjectsKey(){return productStorageKey('rfidHeartmapCreatedProjects')}
+function getProjectNamesKey(){return productStorageKey('rfidHeartmapProjectNames')}
+function getProjectDetailsKey(){return productStorageKey('rfidHeartmapProjectDetails')}
+function getProjectActivityKey(){return productStorageKey('rfidHeartmapProjectActivity')}
+function getSelectedMetricKey(){return productStorageKey('rfidHeartmapSelectedHeatmapMetric')}
+function getScanStoragePrefix(){return activeProductType==='wifi'?'wifiHeatmapSurveyDataPoints:':'rfidHeartmapSurveyDataPoints:'}
+function saveLastView(screenId){
+  if(restoringLastView) return;
+  try{
+    sessionStorage.setItem(lastViewStorageKey,JSON.stringify({
+      screenId,
+      productType:activeProductType,
+      projectId:activeProjectId||'warehouse',
+      scanSnapshot:activeScanSnapshot||null,
+      zoneIndex:activeZoneIndex||0,
+      sectorSize:document.getElementById('sectorMap')?.dataset.size||'Small'
+    }));
+  }catch(error){}
+}
+function getScanGridSizeKey(snapshot=activeScanSnapshot){
+  const snapshotPart=snapshot?`:${encodeURIComponent(snapshot.zoneId||'zone')}:${Number(snapshot.number)||1}`:':base';
+  return `scanGridSize:${activeProductType}:${activeProjectId||'warehouse'}${snapshotPart}`;
+}
+function saveScanGridSizePreference(){
+  const size=document.getElementById('sectorMap').dataset.size||'Small';
+  try{
+    localStorage.setItem(getScanGridSizeKey(),size);
+    if(activeScanSnapshot) localStorage.setItem(getScanGridSizeKey(null),size);
+  }catch(error){}
+}
+function restoreScanGridSizePreference(){
+  const sectorMap=document.getElementById('sectorMap');
+  let size=sectorMap.dataset.size||'Small';
+  try{
+    size=localStorage.getItem(getScanGridSizeKey())||'';
+    if(!size&&activeScanSnapshot) size=localStorage.getItem(getScanGridSizeKey(null))||'';
+  }catch(error){}
+  if(!['Small','Medium','Large','XL'].includes(size)) size='Small';
+  sectorMap.dataset.size=size;
+  document.querySelectorAll('.sector-option').forEach(option=>option.classList.toggle('active',option.dataset.size===size));
+}
+function showScreen(id){
+  if(id==='scan') restoreScanGridSizePreference();
+  screens.forEach(s=>s.classList.toggle('active', s.id===id));
+  document.getElementById(id).scrollTop = 0;
+  if(id==='zoneDistance') requestAnimationFrame(renderDistancePoints);
+  if(id==='zoneSize') requestAnimationFrame(()=>{syncSectorGrid();constrainSectorPan();renderSectorMarker()});
+  if(id==='scan') requestAnimationFrame(()=>{syncScanGrid();constrainScanPan();renderScanMarkers();updateSavedScanCount()});
+  if(id==='heatmap') requestAnimationFrame(renderHeatmap);
+  saveLastView(id);
+}
+document.getElementById('projectsBack').onclick=()=>{
+  showScreen('productHome');
+};
+function switchProduct(productType){
+  // Move out of the chooser as soon as a card is activated, before loading project data.
+  showScreen('projects');
+  activeProductType=productType==='wifi'?'wifi':'rfid';
+  updateHeatmapMetricAvailability();
+  document.getElementById('heatmapActionLabel').textContent=activeProductType==='wifi'?'WiFi Heatmaps':'RFID Heatmaps';
+  document.title=`${activeProductType==='wifi'?'WiFi':'RFID'} Heatmap Mobile Prototype`;
+  document.querySelectorAll('.product-card').forEach(card=>card.setAttribute('aria-pressed',String(card.dataset.product===activeProductType)));
+  createdProjects=[];
+  document.querySelectorAll('.project-open[data-project-id]').forEach(card=>{if(card.dataset.projectId!=='warehouse') card.remove()});
+  activeProjectId='warehouse';
+  activeProjectImageSrc='';
+  loadCreatedProjects();
+  if(activeProductType==='wifi') seedWifiExampleProject();
+  const projectName=getProjectDisplayName('warehouse','Warehouse A - RFID Survey');
+  document.querySelectorAll('.project-open[data-project-id="warehouse"]').forEach(card=>{
+    card.dataset.name=projectName;
+    const label=card.querySelector('.name, .meta b');
+    if(label) label.textContent=projectName;
+  });
+  filterProjects();
+  applyProjectSort();
+  activateProjectScanData('warehouse');
+  if(typeof selectedHeatmapMetric!=='undefined'){
+    try{selectedHeatmapMetric=localStorage.getItem(getSelectedMetricKey())||getDefaultHeatmapMetric()}catch(error){selectedHeatmapMetric=getDefaultHeatmapMetric()}
+    if(activeProductType==='rfid'&&selectedHeatmapMetric==='Download speed') selectedHeatmapMetric='Signal level';
+    if(![...document.querySelectorAll('.metric-option')].some(option=>option.dataset.metric===selectedHeatmapMetric)) selectedHeatmapMetric=getDefaultHeatmapMetric();
+    try{localStorage.setItem(getSelectedMetricKey(),selectedHeatmapMetric)}catch(error){}
+    setHeatmapMetric(selectedHeatmapMetric);
+    loadHeatmapDisplaySettings();
+    applyHeatmapDisplaySettings();
+  }
+  showScreen('projects');
+}
+document.querySelectorAll('.product-card').forEach(card=>card.addEventListener('click',()=>switchProduct(card.dataset.product)));
+document.querySelectorAll('.go-projects').forEach(b=>b.onclick=()=>showScreen('projects'));
+document.querySelectorAll('.go-detail').forEach(b=>b.onclick=()=>showScreen('detail'));
+document.querySelector('#heatmap .top-x').onclick=()=>showScreen('projects');
+let activeProjectId='warehouse';
+let creatingNewProject=false;
+let activeProjectImageSrc='';
+let activeZoneIndex=0;
+let activeSnapshotNumber=null;
+document.querySelectorAll('.project-open').forEach(el=>{
+  el.onclick=()=>openProjectRecord({
+    id:'warehouse',
+    name:el.dataset.name||'Warehouse A - RFID Survey',
+    date:'24 Sep 2026',
+    description:'RFID coverage survey for reader and antenna placement.'
+  });
+});
+function getActiveProjectFloorPlanSource(){
+  const project=createdProjects.find(item=>item.id===activeProjectId);
+  if(activeProjectImageSrc) return activeProjectImageSrc;
+  if(project?.image) return project.image;
+  const storedFloorPlan=getStoredFloorPlanImage();
+  if(storedFloorPlan) return storedFloorPlan;
+  const hero=document.querySelector('.hero-thumb');
+  const heroImage=hero?.querySelector('img');
+  if(heroImage?.src) return heroImage.src;
+  const svg=hero?.querySelector('svg');
+  if(svg){
+    const copy=svg.cloneNode(true);
+    copy.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    copy.setAttribute('width','600');
+    copy.setAttribute('height','430');
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(copy))}`;
+  }
+  return '';
+}
+document.getElementById('resumeScan').onclick=()=>{
+  activeScanSnapshot=null;
+  activateProjectScanData(activeProjectId);
+  const currentZone=getActiveProjectZones()[0];
+  const currentSnapshot=currentZone?.snapshots?.[currentZone.snapshots.length-1];
+  document.getElementById('scanTitle').textContent=getSnapshotHeaderText({
+    zoneName:currentZone?.name||'New Zone 1',number:currentSnapshot?.number||1,date:currentSnapshot?.date||'2026-09-24'
+  });
+  const image=document.getElementById('scanFloorImage');
+  const source=getActiveProjectFloorPlanSource();
+  if(source){if(image.src!==source) image.src=source}
+  else image.removeAttribute('src');
+  showScreen('scan');
+};
+document.getElementById('showHeatmap').onclick=openHeatmap;
+function openZoneActions(index){
+  activeZoneIndex=index;
+  activeSnapshotNumber=null;
+  document.getElementById('zoneActionTitle').textContent='Zone actions';
+  document.getElementById('renameZoneAction').hidden=false;
+  document.getElementById('duplicateZoneAction').hidden=false;
+  document.getElementById('addSnapshotAction').hidden=false;
+  document.getElementById('removeZoneAction').textContent='Remove';
+  openSheet(zoneActionSheet);
+}
+function openSnapshotActions(zoneIndex,snapshotNumber){
+  activeZoneIndex=zoneIndex;
+  activeSnapshotNumber=snapshotNumber;
+  document.getElementById('zoneActionTitle').textContent=`Snap ${snapshotNumber} actions`;
+  document.getElementById('renameZoneAction').hidden=true;
+  document.getElementById('duplicateZoneAction').hidden=true;
+  document.getElementById('addSnapshotAction').hidden=true;
+  document.getElementById('removeZoneAction').textContent='Remove snapshot';
+  openSheet(zoneActionSheet);
+}
+document.getElementById('projectZoneRows').addEventListener('click',event=>{
+  const menu=event.target.closest('.zone-menu-button');
+  if(menu){openZoneActions(Number(menu.dataset.zoneIndex)||0);return}
+  const snapshotRow=event.target.closest('.child-row');
+  if(snapshotRow) openSnapshotActions(Number(snapshotRow.dataset.zoneIndex)||0,Number(snapshotRow.dataset.snapshotNumber)||1);
+});
+document.getElementById('renameZoneAction').onclick=()=>{
+  closeSheet(zoneActionSheet);
+  const label=document.querySelector(`[data-zone-index="${activeZoneIndex}"] .zone-name`);
+  if(label) beginZoneNameEdit(label,activeZoneIndex);
+};
+document.getElementById('duplicateZoneAction').onclick=()=>{
+  const zones=getActiveProjectZones();
+  const source=zones[activeZoneIndex];
+  if(!source){closeSheet(zoneActionSheet);return}
+  let number=1;
+  while(zones.some(zone=>zone.name===`New Zone ${number}`)) number++;
+  const copy=JSON.parse(JSON.stringify(source));
+  copy.id=`zone-${Date.now()}-${number}`;
+  copy.name=`New Zone ${number}`;
+  zones.splice(activeZoneIndex+1,0,copy);
+  saveActiveProjectZones(zones);
+  renderProjectZones(zones);
+  closeSheet(zoneActionSheet);
+};
+document.getElementById('addSnapshotAction').onclick=()=>{
+  const zones=getActiveProjectZones();
+  const zone=zones[activeZoneIndex];
+  if(!zone){closeSheet(zoneActionSheet);return}
+  zone.snapshots=zone.snapshots||[];
+  const nextNumber=zone.snapshots.reduce((max,snapshot)=>Math.max(max,Number(snapshot.number)||0),0)+1;
+  const snapshot={number:nextNumber,date:new Date().toISOString()};
+  zone.snapshots.push(snapshot);
+  saveActiveProjectZones(zones);
+  renderProjectZones(zones);
+  closeSheet(zoneActionSheet);
+  activeScanSnapshot={zoneId:zone.id||`zone-${activeZoneIndex+1}`,zoneName:zone.name||`New Zone ${activeZoneIndex+1}`,number:nextNumber,date:snapshot.date};
+  activateProjectScanData(activeProjectId,activeScanSnapshot);
+  const source=getActiveProjectFloorPlanSource();
+  const floorImage=document.getElementById('scanFloorImage');
+  if(source){if(floorImage.src!==source) floorImage.src=source}else floorImage.removeAttribute('src');
+  scanMarkers.user={x:50,y:50};
+  scanMarkers.wifi={x:50,y:50};
+  syncScanGrid();
+  document.getElementById('scanTitle').textContent=getSnapshotHeaderText(activeScanSnapshot);
+  renderScanMarkers();
+  showScreen('scan');
+};
+function openSnapshotScan(zoneIndex,snapshotNumber){
+  const zone=getActiveProjectZones()[zoneIndex];
+  const snapshot=zone?.snapshots?.find(item=>Number(item.number)===snapshotNumber);
+  if(!zone||!snapshot) return;
+  activeZoneIndex=zoneIndex;
+  activeScanSnapshot={zoneId:zone.id||`zone-${zoneIndex+1}`,zoneName:zone.name||`New Zone ${zoneIndex+1}`,number:snapshotNumber,date:snapshot.date||'2026-09-24'};
+  activateProjectScanData(activeProjectId,activeScanSnapshot);
+  const source=getActiveProjectFloorPlanSource();
+  const floorImage=document.getElementById('scanFloorImage');
+  if(source){if(floorImage.src!==source) floorImage.src=source}else floorImage.removeAttribute('src');
+  document.getElementById('scanTitle').textContent=getSnapshotHeaderText(activeScanSnapshot);
+  syncScanGrid();
+  renderScanMarkers();
+  showScreen('scan');
+}
+document.getElementById('removeZoneAction').onclick=()=>{
+  const zones=getActiveProjectZones();
+  if(activeSnapshotNumber!==null){
+    const zone=zones[activeZoneIndex];
+    const snapshotIndex=zone?.snapshots?.findIndex(item=>Number(item.number)===activeSnapshotNumber)??-1;
+    if(!zone||snapshotIndex<0){closeSheet(zoneActionSheet);return}
+    if(!window.confirm(`Remove Snap ${activeSnapshotNumber}?`)) return;
+    const snapshot=zone.snapshots[snapshotIndex];
+    const zoneId=zone.id||`zone-${activeZoneIndex+1}`;
+    try{localStorage.removeItem(getSnapshotScanStorageKey(activeProjectId,zoneId,snapshot.number||activeSnapshotNumber))}catch(error){}
+    zone.snapshots.splice(snapshotIndex,1);
+    saveActiveProjectZones(zones);
+    renderProjectZones(zones);
+    activeSnapshotNumber=null;
+    closeSheet(zoneActionSheet);
+    return;
+  }
+  if(!zones[activeZoneIndex]){closeSheet(zoneActionSheet);return}
+  if(!window.confirm(`Remove “${zones[activeZoneIndex].name}” and its snapshots?`)) return;
+  zones.splice(activeZoneIndex,1);
+  saveActiveProjectZones(zones);
+  renderProjectZones(zones);
+  closeSheet(zoneActionSheet);
+};
+document.getElementById('addZoneButton').onclick=()=>{
+  openSheet(document.getElementById('addZoneSheet'));
+};
+function addZoneToActiveProject(){
+  const zones=getActiveProjectZones();
+  let number=1;
+  while(zones.some(zone=>zone.name===`New Zone ${number}`)) number++;
+  zones.push({id:`zone-${Date.now()}-${number}`,name:`New Zone ${number}`,snapshots:[{number:1,date:new Date().toISOString()}]});
+  saveActiveProjectZones(zones);
+  renderProjectZones(zones);
+}
+['addZoneFromExistingMap','addZoneFromNewPhoto'].forEach(id=>{
+  document.getElementById(id).onclick=()=>{
+    closeSheet(document.getElementById('addZoneSheet'));
+    addZoneToActiveProject();
+  };
+});
+function beginZoneNameEdit(label,zoneIndex=0){
+  if(label.isContentEditable) return;
+  const original=label.textContent.trim();
+  label.contentEditable='true';
+  label.focus({preventScroll:true});
+  const range=document.createRange();
+  range.selectNodeContents(label);
+  range.collapse(false);
+  const selection=window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+  let cancelled=false;
+  label.addEventListener('blur',()=>{
+    const name=cancelled?original:(label.textContent.trim()||original);
+    label.textContent=name;
+    label.contentEditable='false';
+    if(cancelled||name===original) return;
+    const zones=getActiveProjectZones();
+    if(zones[zoneIndex]) zones[zoneIndex].name=name;
+    saveActiveProjectZones(zones);
+  },{once:true});
+  label.addEventListener('keydown',event=>{
+    if(event.key==='Enter'){event.preventDefault();label.blur()}
+    if(event.key==='Escape'){event.preventDefault();cancelled=true;label.blur()}
+  });
+}
+
+const newSheet=document.getElementById('newProjectSheet');
+const sortSheet=document.getElementById('sortSheet');
+const projectActionSheet=document.getElementById('projectActionSheet');
+const zoneActionSheet=document.getElementById('zoneActionSheet');
+const deleteConfirmSheet=document.getElementById('deleteConfirmSheet');
+const replaceImageSheet=document.getElementById('replaceImageSheet');
+function openSheet(el){el.classList.add('show')}
+function closeSheet(el){el.classList.remove('show')}
+function handleProjectMenuClick(e){
+  const button=e.target.closest('.project-menu-btn');
+  if(!button) return;
+  e.preventDefault();
+  e.stopPropagation();
+  activeProjectId=button.closest('.project-open')?.dataset.projectId||'warehouse';
+  activeProjectImageSrc=createdProjects.find(project=>project.id===activeProjectId)?.image||'';
+  activateProjectScanData(activeProjectId);
+  openSheet(projectActionSheet);
+}
+document.getElementById('gridView').addEventListener('click',handleProjectMenuClick,true);
+document.getElementById('listView').addEventListener('click',handleProjectMenuClick,true);
+document.getElementById('resumeProjectScan').onclick=()=>{
+  closeSheet(projectActionSheet);
+  markProjectActivity(activeProjectId,'lastOpenedAt');
+  showScreen('scan');
+};
+document.getElementById('deleteProjectAction').onclick=()=>{
+  closeSheet(projectActionSheet);
+  openSheet(deleteConfirmSheet);
+};
+document.getElementById('cancelProjectDelete').onclick=()=>closeSheet(deleteConfirmSheet);
+document.querySelector('#detail .delete').onclick=()=>openSheet(deleteConfirmSheet);
+document.getElementById('confirmProjectDelete').onclick=()=>{
+  closeSheet(deleteConfirmSheet);
+  document.querySelectorAll('.project-open').forEach(project=>{
+    if((project.dataset.projectId||'warehouse')===activeProjectId) project.remove();
+  });
+  if(activeProjectId!=='warehouse'){
+    createdProjects=createdProjects.filter(project=>project.id!==activeProjectId);
+    normalizeDefaultProjectNumbers();
+    try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}
+    localStorage.removeItem(getScanStoragePrefix()+activeProjectId);
+  }
+  showScreen('projects');
+};
+document.getElementById('newProjectCard').onclick=()=>{beginNewProject();openSheet(newSheet)};
+document.getElementById('newProjectRow').onclick=()=>{beginNewProject();openSheet(newSheet)};
+document.querySelectorAll('.sheet-close').forEach(b=>b.onclick=()=>closeSheet(b.closest('.sheet-backdrop')));
+document.querySelectorAll('.sheet-backdrop').forEach(s=>s.addEventListener('click',e=>{if(e.target===s) closeSheet(s)}));
+let activeSortChoice=document.querySelector('.sort-choice.active');
+const sortDirections={
+  'Project name':'Z → A',
+  'Date created':'Dec → Jan',
+  'Date modified':'Dec → Jan',
+  'Last opened':'New → Old'
+};
+function getProjectActivity(){
+  try{return JSON.parse(localStorage.getItem(getProjectActivityKey())||'{}')}catch(error){return {}}
+}
+function markProjectActivity(projectId,field){
+  const activity=getProjectActivity();
+  activity[projectId]=activity[projectId]||{};
+  activity[projectId][field]=Date.now();
+  try{localStorage.setItem(getProjectActivityKey(),JSON.stringify(activity))}catch(error){}
+}
+function sortDirectionLabel(sortName){return sortDirections[sortName]||'Dec → Jan'}
+function toggleSortDirection(sortName){
+  const direction=sortDirectionLabel(sortName);
+  sortDirections[sortName]=sortName==='Project name'
+    ? (direction==='Z → A'?'A → Z':'Z → A')
+    : (direction==='Dec → Jan'||direction==='New → Old'?'Jan → Dec':'Dec → Jan');
+  if(sortName==='Last opened') sortDirections[sortName]=direction==='New → Old'?'Old → New':'New → Old';
+}
+function sortProjectElements(container,sortName,direction){
+  if(!container) return;
+  const cards=[...container.querySelectorAll('.project-open')];
+  const projects=cards.map(card=>{
+    const projectId=card.dataset.projectId;
+    const project=createdProjects.find(item=>item.id===projectId);
+    const baseDate=Date.parse(project?.date||'24 Sep 2026')||0;
+    let value;
+    if(sortName==='Project name') value=(card.dataset.name||'').toLocaleLowerCase();
+    else if(sortName==='Date created') value=baseDate;
+    else if(sortName==='Date modified') value=getProjectActivity()[projectId]?.modifiedAt||Date.parse(project?.modifiedAt||project?.date||'24 Sep 2026')||baseDate;
+    else value=getProjectActivity()[projectId]?.lastOpenedAt||Date.parse(project?.lastOpenedAt||project?.date||'24 Sep 2026')||baseDate;
+    return {card,value};
+  });
+  const ascending=direction==='A → Z'||direction==='Jan → Dec'||direction==='Old → New';
+  projects.sort((a,b)=>{
+    const order=typeof a.value==='string'?a.value.localeCompare(b.value):a.value-b.value;
+    return ascending?order:-order;
+  });
+  projects.forEach(({card})=>container.append(card));
+}
+function applyProjectSort(){
+  if(!activeSortChoice) return;
+  const sortName=activeSortChoice.dataset.sort;
+  const direction=sortDirectionLabel(sortName);
+  sortProjectElements(document.getElementById('gridView'),sortName,direction);
+  sortProjectElements(document.getElementById('listView'),sortName,direction);
+}
+function setActiveSort(choice){
+  activeSortChoice=choice;
+  document.querySelectorAll('.sort-choice').forEach(option=>{
+    const active=option===choice;
+    option.classList.toggle('active',active);
+    option.textContent=active
+      ? `${option.dataset.sort} | ${sortDirectionLabel(option.dataset.sort)}`
+      : option.dataset.sort;
+  });
+  const label=choice.dataset.sort;
+  const detail=sortDirectionLabel(label);
+  document.getElementById('sortOpen').innerHTML=`${label} <span id="sortDirectionToggle" style="color:#aaa">| ${detail}</span>`;
+  applyProjectSort();
+}
+document.getElementById('sortOpen').onclick=e=>{
+  if(e.target.closest('#sortDirectionToggle')){
+    e.preventDefault();
+    toggleSortDirection(activeSortChoice.dataset.sort);
+    setActiveSort(activeSortChoice);
+    return;
+  }
+  openSheet(sortSheet);
+};
+document.querySelectorAll('.sort-choice').forEach(b=>b.onclick=()=>{
+  setActiveSort(b);
+  closeSheet(sortSheet);
+});
+let listMode=false;
+document.getElementById('toggleView').onclick=()=>{
+  listMode=!listMode;
+  document.getElementById('gridView').classList.toggle('hidden',listMode);
+  document.getElementById('listView').classList.toggle('active',listMode);
+  const toggleView=document.getElementById('toggleView');
+  toggleView.setAttribute('aria-label',listMode?'Switch to grid view':'Switch to list view');
+  toggleView.innerHTML=listMode
+    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="5" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="19" r="1.5" fill="currentColor"/><path d="M9 5h12M9 12h12M9 19h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+};
+
+const projectSearchInput=document.getElementById('searchInput');
+function filterProjects(){
+  const q=projectSearchInput.value.trim().toLocaleLowerCase();
+  document.querySelectorAll('.project-open').forEach(el=>{
+    const searchText=`${el.dataset.name||''} ${el.dataset.description||''}`.toLocaleLowerCase();
+    const match=searchText.includes(q);
+    if(el.closest('#gridView')) el.style.display=match?'block':'none';
+    else el.style.display=match?'flex':'none';
+  });
+}
+projectSearchInput.addEventListener('input',filterProjects);
+
+let floorPlanObjectUrl=null;
+let createdProjects=[];
+function getFloorPlanImageStorageKey(projectId=activeProjectId){return `${activeProductType}HeatmapFloorPlanImage:${projectId}`}
+function getStoredFloorPlanImage(projectId=activeProjectId){
+  try{return localStorage.getItem(getFloorPlanImageStorageKey(projectId))||''}catch(error){return ''}
+}
+function normalizeDefaultProjectNumbers(){
+  const defaults=createdProjects
+    .map((project,index)=>({project,index,match:/^Project\s+(\d+)$/i.exec((project.name||'').trim())}))
+    .filter(item=>item.match)
+    .sort((a,b)=>Number(a.match[1])-Number(b.match[1])||a.index-b.index);
+  let changed=false;
+  defaults.forEach((item,index)=>{
+    const name=`Project ${index+1}`;
+    if(item.project.name!==name){item.project.name=name;changed=true}
+  });
+  if(changed){
+    createdProjects.forEach(project=>{
+      document.querySelectorAll(`.project-open[data-project-id="${CSS.escape(project.id)}"]`).forEach(card=>{
+        card.dataset.name=project.name;
+        const label=card.querySelector('.name, .meta b');
+        if(label) label.textContent=project.name;
+      });
+    });
+    try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}
+  }
+}
+function createProjectThumbnail(source){
+  return new Promise(resolve=>{
+    if(!source){resolve('');return}
+    const image=new Image();
+    image.onload=()=>{
+      try{
+        const maxSide=800;
+        const scale=Math.min(1,maxSide/Math.max(image.naturalWidth,image.naturalHeight));
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+        canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+        canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',.82));
+      }catch(error){resolve('')}
+    };
+    image.onerror=()=>resolve('');
+    image.src=source;
+  });
+}
+function normalizeProjectZones(zones,projectDate='24 Sep 2026'){
+  return zones.map((zone,index)=>{
+    const snapshots=Array.isArray(zone.snapshots)?zone.snapshots:(zone.date||zone.number?[{number:zone.number||1,date:zone.date||projectDate}]:[]);
+    return {...zone,id:zone.id||`zone-${index+1}`,name:zone.name||`New Zone ${index+1}`,snapshots};
+  });
+}
+function getSnapshotScanStorageKey(projectId,zoneId,number){
+  return `${getScanStoragePrefix()}${projectId}:snapshot:${encodeURIComponent(zoneId)}:${number}`;
+}
+function snapshotHasSavedPoints(zone,snapshot,index){
+  const zoneId=zone.id||`zone-${index+1}`;
+  try{
+    const current=JSON.parse(localStorage.getItem(getSnapshotScanStorageKey(activeProjectId,zoneId,snapshot.number||1))||'[]');
+    if(Array.isArray(current)&&current.length>0) return true;
+    if(Number(snapshot.number)===1){
+      const legacy=JSON.parse(localStorage.getItem(getScanStoragePrefix()+activeProjectId)||'[]');
+      return Array.isArray(legacy)&&legacy.length>0;
+    }
+  }catch(error){}
+  return false;
+}
+function getActiveProjectZones(){
+  if(activeProjectId==='warehouse'){
+    try{
+      const stored=JSON.parse(localStorage.getItem(getProjectDetailsKey())||'{}').warehouse?.zones;
+      return normalizeProjectZones(Array.isArray(stored)?stored:[{name:'New Zone 1',number:1,date:'2026-09-24'}]);
+    }catch(error){return [{id:'zone-1',name:'New Zone 1',snapshots:[{number:1,date:'2026-09-24'}]}]}
+  }
+  const project=createdProjects.find(item=>item.id===activeProjectId);
+  return normalizeProjectZones(Array.isArray(project?.zones)?project.zones:[{name:'New Zone 1',number:1,date:project?.date||'2026-09-24'}],project?.date);
+}
+function saveActiveProjectZones(zones){
+  if(activeProjectId==='warehouse'){
+    let details={};
+    try{details=JSON.parse(localStorage.getItem(getProjectDetailsKey())||'{}')}catch(error){}
+    details.warehouse={...(details.warehouse||{}),zones};
+    try{localStorage.setItem(getProjectDetailsKey(),JSON.stringify(details))}catch(error){}
+    return;
+  }
+  const project=createdProjects.find(item=>item.id===activeProjectId);
+  if(project){project.zones=zones;try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}}
+}
+function renderProjectZones(zones=getActiveProjectZones()){
+  const container=document.getElementById('projectZoneRows');
+  container.replaceChildren();
+  zones.forEach((zone,index)=>{
+    const row=document.createElement('div');
+    row.className='row zone-row';
+    row.dataset.zoneIndex=String(index);
+    const icon=document.createElement('div');
+    icon.className='structure-icon';
+    icon.setAttribute('aria-hidden','true');
+    icon.innerHTML='<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" fill="none" stroke="#fff" stroke-width="1.2"/><rect x="13.2" y="13.2" width="6.3" height="6.3" fill="none" stroke="#fff" stroke-width="1.2"/></svg>';
+    const label=document.createElement('div');
+    label.className='label muted zone-name';
+    if(index===0) label.id='projectPrimaryFloorLabel';
+    label.textContent=zone.name;
+    const menu=document.createElement('button');
+    menu.className='dots zone-menu-button';
+    menu.type='button';
+    menu.dataset.zoneIndex=String(index);
+    menu.setAttribute('aria-label',`Actions for ${zone.name}`);
+    menu.title='Zone actions';
+    menu.textContent='•••';
+    row.append(icon,label,menu);
+    container.append(row);
+    (zone.snapshots||[]).forEach(snapshot=>{
+      const snapshotRow=document.createElement('div');
+      snapshotRow.className='row child-row';
+      snapshotRow.dataset.zoneIndex=String(index);
+      snapshotRow.dataset.snapshotNumber=String(snapshot.number||1);
+      const snapshotIcon=document.createElement('div');
+      snapshotIcon.className='zone-icon';
+      snapshotIcon.setAttribute('aria-hidden','true');
+      snapshotIcon.innerHTML=snapshotHasSavedPoints(zone,snapshot,index)
+        ?'<svg viewBox="0 0 18 18"><rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="5" cy="5" r="1.1" fill="currentColor"/><circle cx="13" cy="5" r="1.1" fill="currentColor"/><circle cx="9" cy="9" r="1.1" fill="currentColor"/><circle cx="5" cy="13" r="1.1" fill="currentColor"/><circle cx="13" cy="13" r="1.1" fill="currentColor"/></svg>'
+        :'<svg viewBox="0 0 18 18"><rect x="1.5" y="1.5" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+      const snapshotLabel=document.createElement('div');
+      snapshotLabel.className='label';
+      if(index===0&&snapshot===zone.snapshots?.[0]) snapshotLabel.id='projectPrimaryZoneLabel';
+      snapshotLabel.textContent=`#${snapshot.number||1} ${formatThaiZoneDate(snapshot.date||'2026-09-24')}`;
+      snapshotRow.append(snapshotIcon,snapshotLabel);
+      container.append(snapshotRow);
+    });
+  });
+}
+function setProjectDetail(project){
+  const name=project.id==='warehouse'?getProjectDisplayName('warehouse',project.name||'Warehouse A - RFID Survey'):(project.name||'Project');
+  document.getElementById('detailTitle').textContent=name;
+  const projectZones=project.id==='warehouse'?getActiveProjectZones():project.zones;
+  const snapshotDate=projectZones?.[0]?.snapshots?.[0]?.date||projectZones?.[0]?.date;
+  document.getElementById('detailDate').textContent=formatProjectDetailDate(project.createdAt||snapshotDate||project.date)||'24 Sep 2026';
+  const zones=project.id==='warehouse'?getActiveProjectZones():normalizeProjectZones(Array.isArray(project.zones)?project.zones:[{name:'New Zone 1',number:1,date:project.date||'2026-09-24'}],project.date);
+  if(project.id!=='warehouse') saveActiveProjectZones(zones);
+  renderProjectZones(zones);
+  const description=project.id==='warehouse'?getProjectDisplayDescription(project.description||'RFID coverage survey for reader and antenna placement.'):(project.description||'');
+  document.getElementById('projectDescription').textContent=description||'No description';
+  const projectName=document.querySelector('.project-name-row span');
+  if(projectName) projectName.textContent=name;
+  const hero=document.querySelector('.hero-thumb');
+  renderProjectThumbnail(hero,{...project,image:activeProjectImageSrc||project.image||getStoredFloorPlanImage()},name+' floor plan');
+}
+function formatProjectDetailDate(value){
+  if(!value) return '';
+  const raw=String(value);
+  const hasTime=typeof value==='number'||/[T ]\d{1,2}:\d{2}/.test(raw);
+  const date=new Date(value);
+  if(!hasTime||Number.isNaN(date.getTime())) return raw;
+  const now=new Date();
+  const sameDay=date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth()&&date.getDate()===now.getDate();
+  if(sameDay){
+    const sameHour=date.getHours()===now.getHours();
+    if(sameHour){
+      const minutes=Math.max(0,Math.floor((now.getTime()-date.getTime())/60000));
+      return minutes===0?'Just now':`${minutes} min ago`;
+    }
+    return date.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }
+  return date.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function formatThaiZoneDate(value){
+  const date=new Date(value||Date.now());
+  if(Number.isNaN(date.getTime())) return 'Sep 24, 2026';
+  const monthDay=date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `${monthDay}, ${date.getFullYear()}`;
+}
+function getSnapshotHeaderText(snapshot){
+  const date=new Date(snapshot.date||Date.now());
+  const dateLabel=date.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+  return `Snap ${snapshot.number||1} • ${dateLabel}, ${date.getUTCFullYear()+543}`;
+}
+function getProjectDisplayName(projectId,fallback){
+  if(projectId!=='warehouse') return fallback;
+  try{
+    const names=JSON.parse(localStorage.getItem(getProjectNamesKey())||'{}');
+    return names.warehouse||fallback;
+  }catch(error){return fallback}
+}
+function getProjectDisplayDescription(fallback){
+  try{
+    const details=JSON.parse(localStorage.getItem(getProjectDetailsKey())||'{}');
+    return details.warehouse?.description??fallback;
+  }catch(error){return fallback}
+}
+function saveProjectDescription(projectId,rawDescription){
+  const description=rawDescription.trim();
+  if(projectId==='warehouse'){
+    let details={};
+    try{details=JSON.parse(localStorage.getItem(getProjectDetailsKey())||'{}')}catch(error){}
+    details.warehouse={...(details.warehouse||{}),description};
+    try{localStorage.setItem(getProjectDetailsKey(),JSON.stringify(details))}catch(error){}
+  }else{
+    const project=createdProjects.find(item=>item.id===projectId);
+    if(project) project.description=description;
+    try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}
+  }
+  markProjectActivity(projectId,'modifiedAt');
+  document.querySelectorAll('.project-open').forEach(card=>{
+    if((card.dataset.projectId||'warehouse')===projectId) card.dataset.description=description;
+  });
+  filterProjects();
+  if(activeProjectId===projectId){
+    const field=document.getElementById('projectDescription');
+    if(field) field.textContent=description||'No description';
+  }
+}
+function beginProjectDescriptionEdit(field){
+  if(field.querySelector('textarea')) return;
+  const projectId=activeProjectId||'warehouse';
+  let original='';
+  if(projectId==='warehouse') original=getProjectDisplayDescription('RFID coverage survey for reader and antenna placement.');
+  else original=createdProjects.find(project=>project.id===projectId)?.description||'';
+  const textarea=document.createElement('textarea');
+  textarea.className='project-description-edit';
+  textarea.setAttribute('aria-label','Project description');
+  textarea.value=original;
+  field.replaceChildren(textarea);
+  textarea.focus();
+  let cancelled=false;
+  const finish=()=>{
+    const value=cancelled?original:textarea.value;
+    saveProjectDescription(projectId,value);
+    field.textContent=value.trim()||'No description';
+  };
+  textarea.addEventListener('blur',finish,{once:true});
+  textarea.addEventListener('keydown',event=>{
+    if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();textarea.blur()}
+    if(event.key==='Escape'){event.preventDefault();cancelled=true;textarea.blur()}
+  });
+}
+document.getElementById('projectDescription').addEventListener('click',event=>{
+  if(!event.target.closest('textarea')) beginProjectDescriptionEdit(event.currentTarget);
+});
+document.getElementById('projectDescription').addEventListener('keydown',event=>{
+  if((event.key==='Enter'||event.key===' ')&&event.target===event.currentTarget){
+    event.preventDefault();
+    beginProjectDescriptionEdit(event.currentTarget);
+  }
+});
+function saveProjectName(projectId,rawName){
+  const name=rawName.trim();
+  if(!name) return;
+  if(projectId==='warehouse'){
+    let names={};
+    try{names=JSON.parse(localStorage.getItem(getProjectNamesKey())||'{}')}catch(error){}
+    names.warehouse=name;
+    try{localStorage.setItem(getProjectNamesKey(),JSON.stringify(names))}catch(error){}
+  }else{
+    const project=createdProjects.find(item=>item.id===projectId);
+    if(project) project.name=name;
+    try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}
+  }
+  markProjectActivity(projectId,'modifiedAt');
+  document.querySelectorAll('.project-open').forEach(card=>{
+    if((card.dataset.projectId||'warehouse')!==projectId) return;
+    card.dataset.name=name;
+    const label=card.querySelector('.name, .meta b');
+    if(label) label.textContent=name;
+  });
+  if(activeProjectId===projectId){
+    document.getElementById('detailTitle').textContent=name;
+    const detailName=document.querySelector('.project-name-row span');
+    if(detailName) detailName.textContent=name;
+  }
+}
+function beginProjectNameEdit(label){
+  if(label.isContentEditable) return;
+  const projectId=activeProjectId||'warehouse';
+  const original=label.textContent;
+  label.contentEditable='true';
+  label.setAttribute('aria-label','Edit project name');
+  label.focus({preventScroll:true});
+  let cancelled=false;
+  const finish=()=>{
+    const value=cancelled?original:label.textContent.trim();
+    saveProjectName(projectId,value||original);
+    label.textContent=value||original;
+    label.contentEditable='false';
+  };
+  label.addEventListener('blur',finish,{once:true});
+  label.addEventListener('keydown',event=>{
+    if(event.key==='Enter'){event.preventDefault();label.blur()}
+    if(event.key==='Escape'){event.preventDefault();cancelled=true;label.blur()}
+  });
+}
+document.querySelector('.project-name-row').addEventListener('click',event=>{
+  const label=event.currentTarget.querySelector('span[role="button"], span[contenteditable="true"]');
+  if(label) beginProjectNameEdit(label);
+});
+document.querySelector('.project-name-row').addEventListener('keydown',event=>{
+  if((event.key==='Enter'||event.key===' ')&&event.target.matches('span[role="button"]')){
+    event.preventDefault();
+    beginProjectNameEdit(event.target);
+  }
+});
+function openProjectRecord(project){
+  creatingNewProject=false;
+  activeScanSnapshot=null;
+  activeProjectId=project.id||'warehouse';
+  markProjectActivity(activeProjectId,'lastOpenedAt');
+  activeProjectImageSrc=project.image||'';
+  activateProjectScanData(activeProjectId);
+  setProjectDetail(project);
+  showScreen('detail');
+}
+function createProjectFallbackPlan(){
+  const fallback=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  fallback.setAttribute('viewBox','0 0 100 100');
+  fallback.setAttribute('aria-hidden','true');
+  fallback.classList.add('floor-svg');
+  fallback.innerHTML='<rect x="5" y="5" width="90" height="90" rx="2" fill="#f7f7f7" stroke="#242424" stroke-width="3"/><path d="M5 48h34V25h22V5M39 48v47M61 5v38h34M61 43v52M61 69h34M5 72h20V58h14" fill="none" stroke="#242424" stroke-width="3" stroke-linejoin="round"/><path d="M11 12h18v12H11zM43 54h12v13H43zM68 49h18v13H68zM67 75h20v13H67z" fill="none" stroke="#aaa" stroke-width=".8"/>';
+  return fallback;
+}
+function renderProjectThumbnail(container,project,alt=project.name+' floor plan'){
+  const showFallback=()=>container.replaceChildren(createProjectFallbackPlan());
+  if(!project.image){showFallback();return}
+  const image=document.createElement('img');
+  image.alt=alt;
+  image.loading='eager';
+  image.style.cssText='width:100%;height:100%;object-fit:contain;display:block;background:#f7f7f7';
+  image.onerror=showFallback;
+  image.src=project.image;
+  container.replaceChildren(image);
+}
+function addProjectToLists(project){
+  const gridCard=document.createElement('div');
+  gridCard.className='project-card project-open';
+  gridCard.dataset.name=project.name;
+  gridCard.dataset.description=project.description||'';
+  gridCard.dataset.projectId=project.id;
+  const gridMenu=document.createElement('button');
+  gridMenu.className='project-menu-btn';
+  gridMenu.type='button';
+  gridMenu.setAttribute('aria-label','Project actions');
+  gridMenu.textContent='•••';
+  const thumb=document.createElement('div');
+  thumb.className='thumb';
+  renderProjectThumbnail(thumb,project);
+  const name=document.createElement('div');
+  name.className='name';
+  name.textContent=project.name;
+  const date=document.createElement('div');
+  date.className='date';
+  date.textContent=project.date;
+  gridCard.append(gridMenu,thumb,name,date);
+  gridCard.onclick=()=>openProjectRecord(project);
+  document.getElementById('gridView').append(gridCard);
+
+  const listRow=document.createElement('div');
+  listRow.className='list-row project-open';
+  listRow.dataset.name=project.name;
+  listRow.dataset.description=project.description||'';
+  listRow.dataset.projectId=project.id;
+  const listMenu=document.createElement('button');
+  listMenu.className='project-menu-btn';
+  listMenu.type='button';
+  listMenu.setAttribute('aria-label','Project actions');
+  listMenu.textContent='•••';
+  const miniThumb=document.createElement('div');
+  miniThumb.className='mini-thumb';
+  renderProjectThumbnail(miniThumb,project);
+  const meta=document.createElement('div');
+  meta.className='meta';
+  const title=document.createElement('b');
+  title.textContent=project.name;
+  const listDate=document.createElement('div');
+  listDate.textContent=project.date;
+  meta.append(title,listDate);
+  listRow.append(miniThumb,meta,listMenu);
+  listRow.onclick=()=>openProjectRecord(project);
+  document.getElementById('listView').append(listRow);
+  filterProjects();
+  applyProjectSort();
+}
+function loadCreatedProjects(){
+  try{
+    const stored=JSON.parse(localStorage.getItem(getCreatedProjectsKey())||'[]');
+    if(Array.isArray(stored)) createdProjects=stored;
+  }catch(error){createdProjects=[]}
+  if(activeProductType==='wifi') removeObsoleteWifiSnapshotTwo();
+  normalizeDefaultProjectNumbers();
+  createdProjects.forEach(addProjectToLists);
+}
+function removeObsoleteWifiSnapshotTwo(){
+  if(activeProductType!=='wifi') return;
+  const migrationKey='wifiHeatmapSnapshotTwoCleanupV1';
+  try{if(localStorage.getItem(migrationKey)==='done') return}catch(error){return}
+  let projects=[];
+  try{projects=JSON.parse(localStorage.getItem(getCreatedProjectsKey())||'[]')}catch(error){return}
+  if(!Array.isArray(projects)) return;
+  const project=projects.find(item=>item.id==='wifi-example-warehouse'||item.name==='Warehouse A - WiFi Survey');
+  if(!project) return;
+  const zone=(project.zones||[]).find(item=>item.name==='New Zone 1')||(project.zones||[])[0];
+  if(zone&&Array.isArray(zone.snapshots)) zone.snapshots=zone.snapshots.filter(snapshot=>Number(snapshot.number)!==2);
+  try{
+    localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(projects));
+    localStorage.setItem(migrationKey,'done');
+    createdProjects=projects;
+  }catch(error){}
+}
+function seedWifiExampleProject(){
+  const seededKey='wifiHeatmapExampleProjectSeeded';
+  removeObsoleteWifiSnapshotTwo();
+  try{if(localStorage.getItem(seededKey)==='true') return}catch(error){}
+  const sampleName='Warehouse A - WiFi Survey';
+  if(!createdProjects.some(project=>project.id==='wifi-example-warehouse'||project.name===sampleName)){
+    let rfidProjects=[];
+    try{
+      const stored=JSON.parse(localStorage.getItem('rfidHeartmapCreatedProjects')||'[]');
+      if(Array.isArray(stored)) rfidProjects=stored;
+    }catch(error){}
+    const source=rfidProjects.find(project=>project.name==='Warehouse A - RFID Survey')||rfidProjects.find(project=>/^Project\s+1$/i.test((project.name||'').trim()));
+    const example=source?JSON.parse(JSON.stringify(source)):{zones:[{name:'New Zone 1',snapshots:[{number:1,date:'2026-09-24'}]}]};
+    example.id='wifi-example-warehouse';
+    example.name=sampleName;
+    example.description='WiFi coverage survey with sample measurement points.';
+    if(!Array.isArray(example.zones)) example.zones=[{name:'New Zone 1',snapshots:[{number:1,date:example.date||'2026-09-24'}]}];
+    const firstZone=example.zones.find(zone=>zone.name==='New Zone 1')||example.zones[0];
+    if(firstZone&&Array.isArray(firstZone.snapshots)) firstZone.snapshots=firstZone.snapshots.filter(snapshot=>Number(snapshot.number)!==2);
+    createdProjects.push(example);
+    try{
+      const sourcePoints=source&&localStorage.getItem(`rfidHeartmapSurveyDataPoints:${source.id}`);
+      if(sourcePoints!==null&&sourcePoints!==undefined) localStorage.setItem(`wifiHeatmapSurveyDataPoints:${example.id}`,sourcePoints);
+      localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects));
+      localStorage.setItem('wifiHeatmapSnapshotTwoCleanupV1','done');
+      addProjectToLists(example);
+    }catch(error){createdProjects=createdProjects.filter(project=>project.id!==example.id)}
+  }
+  try{localStorage.setItem(seededKey,'true')}catch(error){}
+}
+function beginNewProject(){
+  creatingNewProject=true;
+  activeProjectId='project-'+Date.now();
+  activeProjectImageSrc='';
+  const usedProjectNumbers=new Set(createdProjects.map(project=>/^Project\s+(\d+)$/i.exec(project.name||'')).filter(Boolean).map(match=>Number(match[1])));
+  let nextProjectNumber=1;
+  while(usedProjectNumbers.has(nextProjectNumber)) nextProjectNumber++;
+  document.getElementById('newProjectName').value=`Project ${nextProjectNumber}`;
+  activateProjectScanData(activeProjectId);
+  if(floorPlanObjectUrl){URL.revokeObjectURL(floorPlanObjectUrl);floorPlanObjectUrl=null}
+  const preview=document.getElementById('newProjectPreview');
+  const defaultFloorPlan=getActiveProjectFloorPlanSource();
+  if(defaultFloorPlan) preview.src=defaultFloorPlan;
+  else preview.removeAttribute('src');
+  document.getElementById('newProjectFileName').textContent=defaultFloorPlan?'Sample floor plan':'';
+}
+async function commitNewProject(destination='detail'){
+  if(!creatingNewProject){if(destination==='heatmap') openHeatmap(); else showScreen('detail');return}
+  const project={
+    id:activeProjectId,
+    name:document.getElementById('newProjectName').value.trim()||'New project',
+    description:document.getElementById('newProjectDescription').value.trim(),
+    createdAt:new Date().toISOString(),
+    date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
+    zones:[{name:'New Zone 1',number:1,date:new Date().toISOString()}],
+    image:await createProjectThumbnail(floorPlanObjectUrl)
+  };
+  createdProjects.push(project);
+  try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}
+  addProjectToLists(project);
+  activeProjectImageSrc=floorPlanObjectUrl||project.image;
+  floorPlanObjectUrl=null;
+  creatingNewProject=false;
+  setProjectDetail(project);
+  if(destination==='heatmap') openHeatmap(); else showScreen('detail');
+}
+function applyFloorPlanImage(file,destination='newProjectDetails'){
+  if(!file) return;
+  if(floorPlanObjectUrl) URL.revokeObjectURL(floorPlanObjectUrl);
+  floorPlanObjectUrl=URL.createObjectURL(file);
+  const selectedObjectUrl=floorPlanObjectUrl;
+  activeProjectImageSrc=selectedObjectUrl;
+  createProjectThumbnail(selectedObjectUrl).then(imageData=>{
+    if(!imageData||floorPlanObjectUrl!==selectedObjectUrl) return;
+    try{
+      const project=createdProjects.find(item=>item.id===activeProjectId);
+      if(project){
+        project.image=imageData;
+        localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects));
+        document.querySelectorAll('.project-open').forEach(card=>{
+          if(card.dataset.projectId!==project.id) return;
+          const thumbnail=card.querySelector('.thumb,.mini-thumb');
+          if(thumbnail) renderProjectThumbnail(thumbnail,project);
+        });
+      }else localStorage.setItem(getFloorPlanImageStorageKey(),imageData);
+    }catch(error){}
+  });
+  const preview=document.createElement('img');
+  preview.src=floorPlanObjectUrl;
+  preview.alt='Selected floor plan';
+  preview.style.cssText='width:100%;height:100%;object-fit:contain;display:block;background:#f7f7f7';
+  document.getElementById('newProjectPreview').src=floorPlanObjectUrl;
+  document.getElementById('newProjectFileName').textContent=file.name.replace(/\.[^.]+$/,'');
+  if(destination==='detail'){
+    const project=createdProjects.find(item=>item.id===activeProjectId)||{id:activeProjectId,name:document.getElementById('detailTitle').textContent};
+    renderProjectThumbnail(document.querySelector('.hero-thumb'),{...project,image:selectedObjectUrl},project.name+' floor plan');
+  }
+  ['distanceFloorImage','sectorFloorImage','scanFloorImage'].forEach(id=>{
+    const image=document.getElementById(id);
+    image.src=floorPlanObjectUrl;
+  });
+  closeSheet(newSheet);
+  closeSheet(replaceImageSheet);
+  showScreen(destination);
+}
+const floorPlanFile=document.getElementById('floorPlanFile');
+const floorPlanCamera=document.getElementById('floorPlanCamera');
+let floorPlanImageDestination='newProjectDetails';
+floorPlanFile.addEventListener('change',()=>applyFloorPlanImage(floorPlanFile.files[0],floorPlanImageDestination));
+floorPlanCamera.addEventListener('change',()=>applyFloorPlanImage(floorPlanCamera.files[0],floorPlanImageDestination));
+document.getElementById('createFromImage').onclick=()=>floorPlanFile.click();
+document.getElementById('createFromPhoto').onclick=()=>floorPlanCamera.click();
+document.getElementById('editNewProjectImage').onclick=()=>{floorPlanImageDestination='newProjectDetails';openSheet(replaceImageSheet)};
+document.getElementById('editProjectFloorPlan').onclick=()=>{floorPlanImageDestination='detail';openSheet(replaceImageSheet)};
+document.getElementById('replaceFromImage').onclick=()=>floorPlanFile.click();
+document.getElementById('replaceFromPhoto').onclick=()=>floorPlanCamera.click();
+document.getElementById('cancelNewProject').onclick=()=>showScreen('projects');
+document.getElementById('newProjectContinue').onclick=()=>showScreen('zoneDistance');
+
+document.getElementById('distanceContinue').onclick=()=>showScreen('zoneSize');
+document.getElementById('zoneContinue').onclick=()=>{saveScanGridSizePreference();syncScanGrid();scanMarkers.user=getSectorSelectedImagePoint();showScreen('scan')};
+document.querySelector('#scan .done-btn').onclick=()=>{
+  if(points<getScanPointLimit()||scanActive) return;
+  if(activeScanSnapshot){
+    openHeatmap();
+    return;
+  }
+  commitNewProject('heatmap');
+};
+function requestDiscardNewProject(){
+  openSheet(document.getElementById('discardProjectConfirmSheet'));
+}
+['distanceBack','sectorBack','scanBack','cancelNewProject'].forEach(id=>{
+  document.getElementById(id).onclick=requestDiscardNewProject;
+});
+document.getElementById('scanBack').onclick=()=>{
+  if(activeScanSnapshot){
+    activeScanSnapshot=null;
+    activateProjectScanData(activeProjectId);
+    renderProjectZones(getActiveProjectZones());
+    showScreen('detail');
+    return;
+  }
+  requestDiscardNewProject();
+};
+document.getElementById('keepNewProject').onclick=()=>closeSheet(document.getElementById('discardProjectConfirmSheet'));
+document.getElementById('confirmDiscardNewProject').onclick=()=>{
+  closeSheet(document.getElementById('discardProjectConfirmSheet'));
+  closeSheet(newSheet);
+  if(creatingNewProject){
+    localStorage.removeItem(getScanStoragePrefix()+activeProjectId);
+    if(floorPlanObjectUrl){URL.revokeObjectURL(floorPlanObjectUrl);floorPlanObjectUrl=null}
+    creatingNewProject=false;
+  }
+  activeProjectId='warehouse';
+  activateProjectScanData(activeProjectId);
+  showScreen('projects');
+};
+const distanceInput=document.getElementById('distanceValue');
+const DISTANCE_PREFERENCE_KEY='rfidHeatmap.distancePreference';
+let distancePreference={value:distanceInput.value||'14.5',unit:'m'};
+try{
+  const savedDistancePreference=JSON.parse(localStorage.getItem(DISTANCE_PREFERENCE_KEY)||'null');
+  if(savedDistancePreference&&typeof savedDistancePreference.value==='string'&&Number.isFinite(Number(savedDistancePreference.value))&&Number(savedDistancePreference.value)>0){
+    distancePreference.value=savedDistancePreference.value;
+  }
+  if(savedDistancePreference?.unit==='ft') distancePreference.unit='ft';
+}catch(error){}
+distanceInput.value=distancePreference.value;
+let lastValidDistanceValue=distancePreference.value;
+let selectedDistanceUnit=distancePreference.unit;
+let distanceMetersPerImagePixel=null;
+function getDistanceImagePixelLength(){
+  const map=document.getElementById('distanceMap');
+  const image=document.getElementById('distanceFloorImage');
+  const bounds=getContainedImageBounds(map,image,false);
+  const zoom=Math.max(distanceZoom,0.001);
+  const dx=(distancePoints.end.x-distancePoints.start.x)/100*bounds.width/zoom;
+  const dy=(distancePoints.end.y-distancePoints.start.y)/100*bounds.height/zoom;
+  return Math.hypot(dx,dy);
+}
+function calibrateDistanceScale(){
+  const pixels=getDistanceImagePixelLength();
+  const value=Number(distanceInput.value);
+  if(pixels>0&&value>0&&Number.isFinite(value)){
+    distanceMetersPerImagePixel=value*(selectedDistanceUnit==='ft'?0.3048:1)/pixels;
+  }
+}
+function updateDistanceValueFromPoints(persist=false){
+  const pixels=getDistanceImagePixelLength();
+  if(!distanceMetersPerImagePixel||pixels<=0) return;
+  const meters=distanceMetersPerImagePixel*pixels;
+  const value=meters/(selectedDistanceUnit==='ft'?0.3048:1);
+  if(!Number.isFinite(value)||value<=0) return;
+  distanceInput.value=value.toFixed(2);
+  lastValidDistanceValue=distanceInput.value;
+  if(persist) saveDistancePreference();
+}
+function saveDistancePreference(){
+  distancePreference={value:distanceInput.value,unit:selectedDistanceUnit};
+  try{localStorage.setItem(DISTANCE_PREFERENCE_KEY,JSON.stringify(distancePreference))}catch(error){}
+}
+function updateDistanceValue(raw){
+  let normalized=raw.replace(/[^0-9.]/g,'');
+  const decimal=normalized.indexOf('.');
+  if(decimal!==-1) normalized=normalized.slice(0,decimal+1)+normalized.slice(decimal+1).replace(/\./g,'');
+  normalized=normalized.slice(0,8);
+  if(normalized!==raw) distanceInput.value=normalized;
+  if(normalized.trim()!==''&&Number.isFinite(Number(normalized))&&Number(normalized)>0){lastValidDistanceValue=normalized;saveDistancePreference()}
+}
+distanceInput.addEventListener('input',()=>updateDistanceValue(distanceInput.value));
+distanceInput.addEventListener('focus',()=>distanceInput.select());
+distanceInput.addEventListener('blur',()=>{
+  if(!distanceInput.value.trim()||!Number.isFinite(Number(distanceInput.value))) distanceInput.value=lastValidDistanceValue;
+  distanceInput.value=Number(distanceInput.value).toFixed(2);
+  lastValidDistanceValue=distanceInput.value;
+  saveDistancePreference();
+  calibrateDistanceScale();
+});
+distanceInput.addEventListener('keydown',event=>{
+  if(event.key==='Enter'){
+    event.preventDefault();
+    distanceInput.blur();
+  }
+});
+function toggleDistanceUnit(){
+  const distanceInMeters=Number(distanceInput.value)*(selectedDistanceUnit==='ft'?0.3048:1);
+  selectedDistanceUnit=selectedDistanceUnit==='m'?'ft':'m';
+  if(Number.isFinite(distanceInMeters)&&distanceInMeters>0){
+    distanceInput.value=(distanceInMeters/(selectedDistanceUnit==='ft'?0.3048:1)).toFixed(2);
+    lastValidDistanceValue=distanceInput.value;
+  }
+  const unit=document.getElementById('distanceChipUnit');
+  unit.querySelectorAll('[data-unit]').forEach(option=>option.classList.toggle('active',option.dataset.unit===selectedDistanceUnit));
+  unit.setAttribute('aria-label',`Distance unit: ${selectedDistanceUnit}. Activate to switch units`);
+  distanceInput.setAttribute('aria-label',`Distance in ${selectedDistanceUnit}`);
+  saveDistancePreference();
+}
+const distanceUnit=document.getElementById('distanceChipUnit');
+distanceUnit.querySelectorAll('[data-unit]').forEach(option=>option.classList.toggle('active',option.dataset.unit===selectedDistanceUnit));
+distanceUnit.setAttribute('aria-label',`Distance unit: ${selectedDistanceUnit}. Activate to switch units`);
+distanceInput.setAttribute('aria-label',`Distance in ${selectedDistanceUnit}`);
+distanceUnit.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();toggleDistanceUnit()});
+distanceUnit.addEventListener('keydown',event=>{
+  if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDistanceUnit()}
+});
+const sectorSettings={
+  Small:{description:'Small Space (e.g. Studio Apartment)',size:'1.0 x 1.0 m',meters:1,grid:20,square:'20px',icon:'M5 22 24 8l19 14M10 20v22h28V20M19 42V28h10v14'},
+  Medium:{description:'Medium Space (e.g. Office, Family Home)',size:'2.0 x 2.0 m',meters:2,grid:40,square:'40px',icon:'M6 42V13l18-8 18 8v29M6 17h36M14 42V24h20v18M14 29h20M14 35h20'},
+  Large:{description:'Large Space (e.g. Open Space, Warehouse)',size:'6.0 x 6.0 m',meters:6,grid:120,square:'120px',icon:'M4 42h40M8 42V18h32v24M14 18v-6h20v6M14 25h20M14 32h20'},
+  XL:{description:'A Vast Open Area (e.g. Stadium, Golf Club)',size:'12.0 x 12.0 m',meters:12,grid:80,square:'240px',icon:'M5 18c0-7 38-7 38 0v18c0 7-38 7-38 0zM5 18c0 7 38 7 38 0M5 27c0 7 38 7 38 0M17 13v30M31 13v30'}
+};
+function getCalibratedCellSize(chosen,map,image){
+  const settings=sectorSettings[chosen]||sectorSettings.Small;
+  const bounds=getContainedImageBounds(map,image,false);
+  const measuredDistance=Number(distanceInput.value)*(selectedDistanceUnit==='ft'?0.3048:1);
+  if(!bounds.width||!bounds.height||!Number.isFinite(measuredDistance)||measuredDistance<=0) return settings.grid;
+  const dx=(distancePoints.end.x-distancePoints.start.x)/100*bounds.width;
+  const dy=(distancePoints.end.y-distancePoints.start.y)/100*bounds.height;
+  const measuredPixels=Math.hypot(dx,dy);
+  if(!Number.isFinite(measuredPixels)||measuredPixels<=0) return settings.grid;
+  return measuredPixels/measuredDistance*settings.meters;
+}
+function syncScanGrid(){
+  const chosen=document.getElementById('sectorMap').dataset.size||'Small';
+  const map=document.getElementById('scanMap');
+  const image=document.getElementById('scanFloorImage');
+  const cellSize=getCalibratedCellSize(chosen,map,image);
+  map.style.setProperty('--grid-step',`${cellSize}px`);
+  map.style.setProperty('--grid-step-x',`${cellSize}px`);
+  map.style.setProperty('--grid-step-y',`${cellSize}px`);
+}
+function syncSectorGrid(){
+  const map=document.getElementById('sectorMap');
+  const chosen=map.dataset.size||'Small';
+  const cellSize=getCalibratedCellSize(chosen,map,document.getElementById('sectorFloorImage'));
+  map.style.setProperty('--grid-step',`${cellSize}px`);
+  map.style.setProperty('--grid-step-x',`${cellSize}px`);
+  map.style.setProperty('--grid-step-y',`${cellSize}px`);
+  map.style.setProperty('--square-size',`${cellSize}px`);
+}
+document.querySelectorAll('.sector-option').forEach(option=>option.onclick=()=>{
+  document.querySelectorAll('.sector-option').forEach(button=>button.classList.toggle('active',button===option));
+  const setting=sectorSettings[option.dataset.size];
+  const map=document.getElementById('sectorMap');
+  map.dataset.size=option.dataset.size;
+  saveScanGridSizePreference();
+  map.style.setProperty('--grid-half',`${setting.grid/2}px`);
+  syncSectorGrid();
+  document.getElementById('sectorTypeName').textContent=setting.description;
+  document.getElementById('sectorTypeSize').textContent=`Sector size: ${setting.size}`;
+  document.querySelector('.sector-type-icon svg path').setAttribute('d',setting.icon);
+  syncScanGrid();
+  renderSectorMarker();
+  saveLastView('zoneSize');
+});
+
+let distancePoints={start:{x:14,y:50},end:{x:86,y:50}};
+let activeDistancePointer=null;
+let floorPlanPan={x:0,y:0};
+let activeMapPan=null;
+let floorPlanPanFrame=null;
+let pendingFloorPlanMapId=null;
+let sectorZoom=1;
+const sectorPointers=new Map();
+let sectorPinchStart=null;
+let distanceZoom=1;
+const distancePointers=new Map();
+let distancePinchStart=null;
+const sectorPosition={x:50,y:50};
+const scanMarkers={user:{...distancePoints.start},wifi:{x:50,y:50}};
+let savedScanPoints=[];
+let activeScanSnapshot=null;
+let scanActive=false;
+let activeScanMarker=null;
+let scanDragOffset={x:0,y:0};
+let scanMarkersFrame=null;
+let heatmapPersonPosition={x:50,y:50};
+let heatmapIsDragging=false;
+let heatmapPan={x:0,y:0};
+let heatmapZoom=1;
+let heatmapPanStart=null;
+let heatmapFloorBounds=null;
+function applyFloorPlanPan(mapId){
+  pendingFloorPlanMapId=mapId;
+  if(floorPlanPanFrame!==null) return;
+  floorPlanPanFrame=requestAnimationFrame(()=>{
+    floorPlanPanFrame=null;
+    const transform=`translate(${floorPlanPan.x}px, ${floorPlanPan.y}px)`;
+    if(pendingFloorPlanMapId==='distanceMap'){
+      document.getElementById('distanceFloorImage').style.transform=`${transform} scale(${distanceZoom})`;
+      return;
+    }
+    if(pendingFloorPlanMapId==='scanMap'){
+      document.getElementById('scanFloorImage').style.transform=transform;
+      return;
+    }
+    if(pendingFloorPlanMapId==='sectorMap'){
+      document.getElementById('sectorFloorImage').style.transform=`${transform} scale(${sectorZoom})`;
+      document.getElementById('sectorMap').style.setProperty('--sector-zoom',sectorZoom);
+    }
+  });
+}
+function renderDistancePoints(){
+  const map=document.getElementById('distanceMap');
+  const image=document.getElementById('distanceFloorImage');
+  const bounds=getContainedImageBounds(map,image);
+  for(const [name,point] of Object.entries(distancePoints)){
+    const mapX=(bounds.left+point.x/100*bounds.width)/map.clientWidth*100;
+    const mapY=(bounds.top+point.y/100*bounds.height)/map.clientHeight*100;
+    for(const selector of ['.distance-point','.distance-halo']){
+      const element=document.querySelector(`${selector}.${name}`);
+      element.style.left=`${mapX}%`;
+      element.style.top=`${mapY}%`;
+    }
+  }
+  const line=document.getElementById('distanceLine');
+  const startX=bounds.left+distancePoints.start.x/100*bounds.width;
+  const startY=bounds.top+distancePoints.start.y/100*bounds.height;
+  const endX=bounds.left+distancePoints.end.x/100*bounds.width;
+  const endY=bounds.top+distancePoints.end.y/100*bounds.height;
+  const deltaX=endX-startX;
+  const deltaY=endY-startY;
+  line.style.left=`${startX/map.clientWidth*100}%`;
+  line.style.top=`${startY/map.clientHeight*100}%`;
+  line.style.width=`${Math.hypot(deltaX,deltaY)}px`;
+  line.style.transform=`translateY(-50%) rotate(${Math.atan2(deltaY,deltaX)}rad)`;
+  const chip=document.querySelector('.distance-chip');
+  chip.style.left=`${(startX+endX)/2/map.clientWidth*100}%`;
+  chip.style.top=`${(startY+endY)/2/map.clientHeight*100}%`;
+}
+function getContainedImageBounds(container,image,includePan=true){
+  if(!image.naturalWidth||!image.naturalHeight){
+    return {left:0,top:0,width:container.clientWidth,height:container.clientHeight};
+  }
+  const scale=Math.min(container.clientWidth/image.naturalWidth,container.clientHeight/image.naturalHeight);
+  const zoom=image.id==='sectorFloorImage'?sectorZoom:image.id==='distanceFloorImage'?distanceZoom:1;
+  const width=image.naturalWidth*scale*zoom;
+  const height=image.naturalHeight*scale*zoom;
+  return {
+    left:(container.clientWidth-width)/2+(includePan?floorPlanPan.x:0),
+    top:(container.clientHeight-height)/2+(includePan?floorPlanPan.y:0),
+    width,
+    height
+  };
+}
+function renderSectorMarker(){
+  const map=document.getElementById('sectorMap');
+  const x=sectorPosition.x;
+  const y=sectorPosition.y;
+  document.getElementById('sectorMarker').style.left=`${x}%`;
+  document.getElementById('sectorMarker').style.top=`${y}%`;
+  const square=document.getElementById('sectorSquare');
+  square.style.left=`${x}%`;
+  square.style.top=`${y}%`;
+}
+function getSectorSelectedImagePoint(){
+  const map=document.getElementById('sectorMap');
+  const bounds=getContainedImageBounds(map,document.getElementById('sectorFloorImage'));
+  const x=sectorPosition.x/100*map.clientWidth;
+  const y=sectorPosition.y/100*map.clientHeight;
+  return {
+    x:Math.max(0,Math.min(100,(x-bounds.left)/bounds.width*100)),
+    y:Math.max(0,Math.min(100,(y-bounds.top)/bounds.height*100))
+  };
+}
+function renderScanMarkers(){
+  const map=document.getElementById('scanMap');
+  const image=document.getElementById('scanFloorImage');
+  const bounds=getContainedImageBounds(map,image);
+  const grid=document.getElementById('scanGrid');
+  if(image.naturalWidth){
+    grid.style.display='block';
+    grid.style.left=`${bounds.left}px`;
+    grid.style.top=`${bounds.top}px`;
+    grid.style.width=`${bounds.width}px`;
+    grid.style.height=`${bounds.height}px`;
+  }else{
+    grid.style.display='none';
+  }
+  const wifiMarker=document.getElementById('scanWifiMarker');
+  const tipOffset=parseFloat(getComputedStyle(wifiMarker).getPropertyValue('--scan-pin-tip-offset'))||37.1;
+  let highlights=document.getElementById('scanCellHighlights');
+  if(!highlights){
+    highlights=document.createElement('div');
+    highlights.id='scanCellHighlights';
+    highlights.setAttribute('aria-hidden','true');
+    map.append(highlights);
+  }
+  highlights.replaceChildren();
+  if(image.naturalWidth){
+    const styles=getComputedStyle(map);
+    const defaultStep=parseFloat(styles.getPropertyValue('--grid-step'))||20;
+    const stepX=parseFloat(styles.getPropertyValue('--grid-step-x'))||defaultStep;
+    const stepY=parseFloat(styles.getPropertyValue('--grid-step-y'))||defaultStep;
+    const centerX=bounds.left+bounds.width/2;
+    const centerY=bounds.top+bounds.height/2;
+    const gridOriginX=centerX-stepX/2;
+    const gridOriginY=centerY-stepY/2;
+    const highlightPoints=savedScanPoints.map(saved=>{
+      const point=saved.wifiImage||saved.wifi;
+      if(!point||!Number.isFinite(Number(point.x))||!Number.isFinite(Number(point.y))) return null;
+      const pointX=saved.wifiImage?bounds.left+Number(point.x)/100*bounds.width:Number(point.x)/100*map.clientWidth;
+      const rawY=saved.wifiImage?bounds.top+Number(point.y)/100*bounds.height:Number(point.y)/100*map.clientHeight;
+      return {x:pointX,y:rawY+(saved.wifiAnchor==='tip'?0:tipOffset)};
+    }).filter(Boolean);
+    for(const point of highlightPoints){
+      const pointX=point.x;
+      const pointY=point.y;
+      const cellLeft=gridOriginX+Math.floor((pointX-gridOriginX)/stepX)*stepX;
+      const cellTop=gridOriginY+Math.floor((pointY-gridOriginY)/stepY)*stepY;
+      const left=Math.max(bounds.left,cellLeft);
+      const top=Math.max(bounds.top,cellTop);
+      const right=Math.min(bounds.left+bounds.width,cellLeft+stepX);
+      const bottom=Math.min(bounds.top+bounds.height,cellTop+stepY);
+      const highlight=document.createElement('div');
+      highlight.className='scan-cell-highlight';
+      highlight.style.left=`${left}px`;
+      highlight.style.top=`${top}px`;
+      highlight.style.width=`${Math.max(0,right-left)}px`;
+      highlight.style.height=`${Math.max(0,bottom-top)}px`;
+      highlight.style.display='block';
+      highlights.append(highlight);
+    }
+  }
+  const positions={
+    user:{x:bounds.left+scanMarkers.user.x/100*bounds.width,y:bounds.top+scanMarkers.user.y/100*bounds.height},
+    wifiTip:{x:scanMarkers.wifi.x/100*map.clientWidth,y:scanMarkers.wifi.y/100*map.clientHeight}
+  };
+  positions.wifi={x:positions.wifiTip.x,y:positions.wifiTip.y-tipOffset};
+  for(const [name,point] of Object.entries(positions)){
+    if(name==='wifiTip') continue;
+    const marker=document.getElementById(name==='wifi'?'scanWifiMarker':'scanUserMarker');
+    marker.style.left=`${point.x/map.clientWidth*100}%`;
+    marker.style.top=`${point.y/map.clientHeight*100}%`;
+  }
+  const line=document.getElementById('scanLink');
+  const wifiTip=positions.wifiTip;
+  const history=document.getElementById('scanHistory');
+  history.setAttribute('viewBox',`0 0 ${map.clientWidth} ${map.clientHeight}`);
+  const imagePoints=savedScanPoints.map(saved=>{
+    const point=saved.wifiImage||saved.wifi;
+    if(!point||!Number.isFinite(Number(point.x))||!Number.isFinite(Number(point.y))) return null;
+    const x=saved.wifiImage?bounds.left+Number(point.x)/100*bounds.width:Number(point.x)/100*map.clientWidth;
+    const y=saved.wifiImage?bounds.top+Number(point.y)/100*bounds.height:Number(point.y)/100*map.clientHeight;
+    const legacyCenterOffset=saved.wifiAnchor==='tip'?0:tipOffset;
+    return {x,y:y+legacyCenterOffset};
+  }).filter(Boolean);
+  const historyElements=[];
+  const svgNamespace='http://www.w3.org/2000/svg';
+  const addHistoryShape=(tag,attributes)=>{
+    const shape=document.createElementNS(svgNamespace,tag);
+    Object.entries(attributes).forEach(([name,value])=>shape.setAttribute(name,String(value)));
+    historyElements.push(shape);
+  };
+  for(let index=0;index<imagePoints.length;index++){
+    const point=imagePoints[index];
+    if(index>0){
+      const previous=imagePoints[index-1];
+      addHistoryShape('line',{x1:previous.x,y1:previous.y,x2:point.x,y2:point.y,stroke:'#3478f6','stroke-width':3,'stroke-linecap':'round'});
+    }
+    addHistoryShape('circle',{cx:point.x,cy:point.y,r:10,fill:'#3478f6',stroke:'#fff','stroke-width':2});
+    addHistoryShape('circle',{cx:point.x,cy:point.y,r:3.5,fill:'#fff'});
+  }
+  history.replaceChildren(...historyElements);
+  document.getElementById('scanUserMarker').style.display='none';
+  line.style.display=imagePoints.length?'block':'none';
+  const previousPoint=imagePoints.at(-1)||positions.user;
+  const dx=wifiTip.x-previousPoint.x;
+  const dy=wifiTip.y-previousPoint.y;
+  line.style.left=`${previousPoint.x/map.clientWidth*100}%`;
+  line.style.top=`${previousPoint.y/map.clientHeight*100}%`;
+  line.style.width=`${Math.hypot(dx,dy)}px`;
+  line.style.transform=`translateY(-50%) rotate(${Math.atan2(dy,dx)}rad)`;
+}
+function scheduleRenderScanMarkers(){
+  if(scanMarkersFrame!==null) return;
+  scanMarkersFrame=requestAnimationFrame(()=>{
+    scanMarkersFrame=null;
+    renderScanMarkers();
+  });
+}
+function getHeatmapPoints(imageHeight){
+  const scanMap=document.getElementById('scanMap');
+  const scanImage=document.getElementById('scanFloorImage');
+  const scanBounds=getContainedImageBounds(scanMap,scanImage);
+  const oldPinTipOffset=37.1;
+  return savedScanPoints.map((saved,index)=>{
+    const point=saved.wifiImage||saved.wifi;
+    if(!point||!Number.isFinite(Number(point.x))||!Number.isFinite(Number(point.y))) return null;
+    let x=Number(point.x);
+    let y=Number(point.y);
+    if(!saved.wifiImage){
+      x=(x*scanMap.clientWidth-scanBounds.left)/scanBounds.width*100;
+      y=(y*scanMap.clientHeight-scanBounds.top)/scanBounds.height*100;
+    }
+    if(saved.wifiAnchor!=='tip') y+=oldPinTipOffset/imageHeight*100;
+    x=Math.max(0,Math.min(100,x));
+    y=Math.max(0,Math.min(100,y));
+    if(activeProductType==='wifi'){
+      if(saved.downloadMbps===null||saved.downloadMbps===undefined||saved.downloadMbps==='') return null;
+      const downloadMbps=Number(saved.downloadMbps);
+      if(!Number.isFinite(downloadMbps)||downloadMbps<0) return null;
+      return {x,y,metricValue:downloadMbps,strength:Math.max(0,Math.min(100,downloadMbps/10))};
+    }
+    const distanceFromCenter=Math.hypot((x-50)/70,(y-50)/70);
+    const strength=Number.isFinite(Number(saved.signalStrength))?Number(saved.signalStrength):Math.round(Math.max(35,Math.min(95,78-distanceFromCenter*27-index*2)));
+    return {x,y,strength};
+  }).filter(Boolean);
+}
+function heatColorForStrength(strength){
+  const stops=heatmapDisplaySettings.gradient==='warm'
+    ?[[0,'#f04438'],[33,'#ffb52e'],[66,'#f4dc3a'],[100,'#5bc84a']]
+    :heatmapDisplaySettings.gradient==='cool'
+      ?[[0,'#234fff'],[25,'#3689e7'],[50,'#778eae'],[75,'#c46c72'],[100,'#ed453d']]
+      :[[0,'#2c5fff'],[17,'#08bde8'],[34,'#18dd89'],[52,'#79ed00'],[69,'#ffd400'],[84,'#ff8d2b'],[100,'#ff453a']];
+  const value=Math.max(0,Math.min(100,Number(strength)||0));
+  let index=1;
+  while(index<stops.length&&value>stops[index][0]) index++;
+  const [fromAt,fromColor]=stops[Math.max(0,index-1)];
+  const [toAt,toColor]=stops[Math.min(stops.length-1,index)];
+  const mix=(hexA,hexB,t)=>Math.round(parseInt(hexA,16)+(parseInt(hexB,16)-parseInt(hexA,16))*t).toString(16).padStart(2,'0');
+  const t=(value-fromAt)/(toAt-fromAt||1);
+  return '#'+[1,3,5].map(offset=>mix(fromColor.slice(offset,offset+2),toColor.slice(offset,offset+2),t)).join('');
+}
+function applyHeatmapDisplaySettings(){
+  const range=getHeatmapMetricRange();
+  const unit=range.unit;
+  const noun=unit==='Mbps'?'DOWNLOAD SPEED':unit==='APs'?'ACCESS POINTS':unit==='%'?'COVERAGE':unit==='ms'?'JITTER':unit==='dBm'?'SIGNAL LEVEL':unit==='dB'?'SIGNAL RATIO':'METRIC';
+  const minTitle=document.getElementById('minSpeedTitle');
+  const maxTitle=document.getElementById('maxSpeedTitle');
+  minTitle.textContent=`MIN ${noun}, ${unit.toUpperCase()}`;
+  maxTitle.textContent=`MAX ${noun}, ${unit.toUpperCase()}`;
+  const setRange=(prefix,value)=>{
+    const number=document.getElementById(`${prefix}SpeedValue`);
+    const slider=document.getElementById(`${prefix}SpeedSlider`);
+    number.min=String(range.min);number.max=String(range.max);number.step='1';number.value=String(value);
+    slider.min=String(range.min);slider.max=String(range.max);slider.value=String(value);
+    document.getElementById(`${prefix}SpeedLower`).textContent=String(range.min);
+    document.getElementById(`${prefix}SpeedUpper`).textContent=String(range.max);
+  };
+  setRange('min',heatmapDisplaySettings.min);setRange('max',heatmapDisplaySettings.max);
+  document.querySelectorAll('.gradient-choice').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.gradient===heatmapDisplaySettings.gradient)));
+  document.querySelectorAll('.settings-toggle').forEach(button=>button.setAttribute('aria-checked',String(!!heatmapDisplaySettings[button.dataset.setting])));
+  document.getElementById('samplingMode').value=heatmapDisplaySettings.samplingMode;
+  const stage=document.getElementById('heatmapStage');
+  stage.classList.toggle('hide-floor-plan',!heatmapDisplaySettings.floorPlan);
+  stage.classList.toggle('hide-survey-path',!heatmapDisplaySettings.surveyPath);
+  stage.dataset.grayUnmeasured=String(heatmapDisplaySettings.grayUnmeasured);
+  const gradients={
+    spectrum:'linear-gradient(90deg,#2c5fff,#08bde8,#18dd89,#79ed00,#ffd400,#ff8d2b,#ff453a)',
+    warm:'linear-gradient(90deg,#f04438,#ffb52e,#f4dc3a,#5bc84a)',
+    cool:'linear-gradient(90deg,#234fff,#3689e7,#778eae,#c46c72,#ed453d)'
+  };
+  document.getElementById('heatmapGradient').style.backgroundImage=gradients[heatmapDisplaySettings.gradient];
+  document.getElementById('heatmapLegendMin').textContent=`${heatmapDisplaySettings.min} ${unit}`;
+  document.getElementById('heatmapLegendMax').textContent=`${heatmapDisplaySettings.max} ${unit}`;
+}
+function updateHeatmapSignal(){
+  const valueElement=document.getElementById('heatmapValue');
+  const wifiMetric=activeProductType==='wifi'&&selectedHeatmapMetric==='Download speed';
+  if(!savedScanPoints.length){
+    valueElement.textContent=wifiMetric?'N/A':'75';
+    valueElement.title=wifiMetric?'Wi-Fi speed estimate is unavailable in this browser.':'Signal strength';
+    valueElement.setAttribute('aria-label',wifiMetric?'Wi-Fi speed estimate unavailable':'Signal strength');
+    updateHeatmapLegendMarker(wifiMetric?0:75);
+    return;
+  }
+  const points=getHeatmapPoints(heatmapDataLayer.clientHeight||1);
+  if(!points.length){
+    valueElement.textContent=wifiMetric?'N/A':'75';
+    valueElement.title=wifiMetric?'Wi-Fi speed estimate is unavailable in this browser.':'Signal strength';
+    valueElement.setAttribute('aria-label',wifiMetric?'Wi-Fi speed estimate unavailable':'Signal strength');
+    updateHeatmapLegendMarker(wifiMetric?0:75);
+    return;
+  }
+  const stage=document.getElementById('heatmapStage');
+  const {left,top,width,height}=heatmapFloorBounds;
+  const personOnFloor={
+    x:(heatmapPersonPosition.x/100*stage.clientWidth-left-heatmapPan.x)/(width*heatmapZoom)*100,
+    y:(heatmapPersonPosition.y/100*stage.clientHeight-top-heatmapPan.y)/(height*heatmapZoom)*100
+  };
+  let weightedTotal=0;
+  let weightedMetricTotal=0;
+  let totalWeight=0;
+  for(const point of points){
+    const dx=(personOnFloor.x-point.x)/100;
+    const dy=(personOnFloor.y-point.y)/100;
+    const distanceSquared=dx*dx+dy*dy;
+    if(distanceSquared<.00001){weightedTotal=point.strength;weightedMetricTotal=point.metricValue??point.strength;totalWeight=1;break}
+    const weight=1/(distanceSquared+.0025);
+    weightedTotal+=point.strength*weight;
+    weightedMetricTotal+=(point.metricValue??point.strength)*weight;
+    totalWeight+=weight;
+  }
+  const strength=Math.round(weightedTotal/totalWeight);
+  if(wifiMetric){
+    const downloadMbps=weightedMetricTotal/totalWeight;
+    valueElement.textContent=`${downloadMbps.toFixed(1)} Mbps est.`;
+    valueElement.title='Estimated download speed reported by the browser; it is not Wi-Fi signal strength.';
+    valueElement.setAttribute('aria-label',`Estimated download speed ${downloadMbps.toFixed(1)} megabits per second`);
+    updateHeatmapLegendMarker((downloadMbps-heatmapDisplaySettings.min)/(heatmapDisplaySettings.max-heatmapDisplaySettings.min)*100);
+  }else{
+    valueElement.textContent=String(strength);
+    valueElement.title='Signal strength';
+    valueElement.setAttribute('aria-label',`Signal strength ${strength}`);
+    updateHeatmapLegendMarker(strength);
+  }
+}
+function updateHeatmapLegendMarker(value){
+  document.getElementById('heatmapGradient')?.style.setProperty('--heatmap-legend-marker',`${Math.max(0,Math.min(100,value))}%`);
+}
+function renderHeatmap(){
+  const stage=document.getElementById('heatmapStage');
+  const layer=document.getElementById('heatmapDataLayer');
+  const image=document.getElementById('heatmapFloorImage');
+  const fallback=document.getElementById('heatmapFallback');
+  const scanImage=document.getElementById('scanFloorImage');
+  const source=activeProjectImageSrc||(scanImage.hasAttribute('src')?scanImage.src:'');
+  if(source&&image.getAttribute('src')!==source){image.src=source}
+  if(!source&&image.hasAttribute('src')) image.removeAttribute('src');
+  const naturalWidth=image.naturalWidth||600;
+  const naturalHeight=image.naturalHeight||430;
+  const scale=Math.min(stage.clientWidth/naturalWidth,stage.clientHeight/naturalHeight);
+  const width=naturalWidth*scale;
+  const height=naturalHeight*scale;
+  const left=(stage.clientWidth-width)/2;
+  const top=(stage.clientHeight-height)/2;
+  for(const element of [image,fallback,layer]){
+    element.style.left=`${left}px`;
+    element.style.top=`${top}px`;
+    element.style.width=`${width}px`;
+    element.style.height=`${height}px`;
+  }
+  heatmapFloorBounds={left,top,width,height};
+  const hasImage=!!image.naturalWidth;
+  image.style.display=hasImage?'block':'none';
+  fallback.style.display=hasImage?'none':'block';
+  document.getElementById('heatmapTitle').textContent=`${document.getElementById('detailTitle').textContent||'RFID Heatmap'} • ${document.getElementById('detailDate').textContent||'24 Sep 2026'}`;
+  const points=getHeatmapPoints(height);
+  const colors=document.getElementById('heatmapColors');
+  const gradients=points.map(point=>{
+    const range=getHeatmapMetricRange();
+    const metricValue=point.metricValue??(range.min+(point.strength/100)*(range.max-range.min));
+    const scaledStrength=Math.max(0,Math.min(100,(metricValue-heatmapDisplaySettings.min)/(heatmapDisplaySettings.max-heatmapDisplaySettings.min)*100));
+    const color=heatColorForStrength(scaledStrength);
+    return `radial-gradient(ellipse at ${point.x}% ${point.y}%, ${color}e8 0%, ${color}a8 15%, ${color}65 31%, transparent 57%)`;
+  });
+  if(points.length<2&&activeProductType!=='wifi') gradients.push('radial-gradient(ellipse at 52% 52%, #f6cf47b8 0%, #f6cf4770 30%, transparent 75%)');
+  colors.style.backgroundImage=gradients.join(',');
+  const connectionSvg=document.getElementById('heatmapConnections');
+  const connectionElements=[];
+  const svgNamespace='http://www.w3.org/2000/svg';
+  const addShape=(tag,attributes)=>{
+    const shape=document.createElementNS(svgNamespace,tag);
+    Object.entries(attributes).forEach(([name,value])=>shape.setAttribute(name,String(value)));
+    connectionElements.push(shape);
+  };
+  for(let index=0;index<points.length;index++){
+    const point=points[index];
+    if(index>0){
+      const previous=points[index-1];
+      addShape('line',{x1:previous.x,y1:previous.y,x2:point.x,y2:point.y,class:'heatmap-route'});
+    }
+    const pointRadius=heatmapDisplaySettings.samplingMode==='All'?2:heatmapDisplaySettings.samplingMode==='Detailed'?1.7:1.25;
+    addShape('circle',{cx:point.x,cy:point.y,r:pointRadius,class:'heatmap-dot'});
+    addShape('circle',{cx:point.x,cy:point.y,r:pointRadius*.34,class:'heatmap-dot-center'});
+  }
+  connectionSvg.replaceChildren(...connectionElements);
+  applyHeatmapPan();
+}
+const heatmapDataLayer=document.getElementById('heatmapDataLayer');
+function applyHeatmapPan(){
+  if(!heatmapFloorBounds) return;
+  const stage=document.getElementById('heatmapStage');
+  const {left,top,width,height}=heatmapFloorBounds;
+  const scaledWidth=width*heatmapZoom;
+  const scaledHeight=height*heatmapZoom;
+  const markerX=heatmapPersonPosition.x/100*stage.clientWidth;
+  const markerY=heatmapPersonPosition.y/100*stage.clientHeight;
+  const footInsetX=Math.min(18,scaledWidth/2);
+  const footInsetY=Math.min(18,scaledHeight/2);
+  const minX=markerX+footInsetX-left-scaledWidth;
+  const maxX=markerX-footInsetX-left;
+  const minY=markerY+footInsetY-top-scaledHeight;
+  const maxY=markerY-footInsetY-top;
+  heatmapPan.x=Math.max(minX,Math.min(maxX,heatmapPan.x));
+  heatmapPan.y=Math.max(minY,Math.min(maxY,heatmapPan.y));
+  const transform=`translate(${heatmapPan.x}px, ${heatmapPan.y}px) scale(${heatmapZoom})`;
+  ['heatmapFloorImage','heatmapFallback','heatmapDataLayer'].forEach(id=>{
+    document.getElementById(id).style.transform=transform;
+  });
+  positionHeatmapPerson();
+  updateHeatmapSignal();
+}
+function positionHeatmapPerson(){
+  const person=document.getElementById('heatmapPerson');
+  person.style.left=`${heatmapPersonPosition.x}%`;
+  person.style.top=`${heatmapPersonPosition.y}%`;
+}
+function setHeatmapZoomAt(nextZoom,anchor,point){
+  if(!heatmapFloorBounds) return;
+  const {left,top,width,height}=heatmapFloorBounds;
+  heatmapZoom=Math.max(1,Math.min(4,nextZoom));
+  heatmapPan={
+    x:point.x-left-anchor.x/100*width*heatmapZoom,
+    y:point.y-top-anchor.y/100*height*heatmapZoom
+  };
+  applyHeatmapPan();
+}
+function openHeatmap(){
+  heatmapPan={x:0,y:0};
+  heatmapZoom=1;
+  heatmapPersonPosition={x:50,y:50};
+  document.getElementById('heatmapPerson').classList.remove('is-extended','is-dragging');
+  showScreen('heatmap');
+}
+function moveHeatmapMap(event){
+  if(!heatmapPanStart) return;
+  heatmapPan={
+    x:heatmapPanStart.panX+event.clientX-heatmapPanStart.pointerX,
+    y:heatmapPanStart.panY+event.clientY-heatmapPanStart.pointerY
+  };
+  applyHeatmapPan();
+}
+const heatmapStage=document.getElementById('heatmapStage');
+const heatmapPointers=new Map();
+let heatmapPinch=null;
+function getHeatmapPointer(event){
+  const rect=heatmapStage.getBoundingClientRect();
+  return {clientX:event.clientX,clientY:event.clientY,x:event.clientX-rect.left,y:event.clientY-rect.top};
+}
+function startHeatmapPinch(){
+  if(!heatmapFloorBounds||heatmapPointers.size<2) return;
+  const [first,second]=[...heatmapPointers.values()];
+  const point={x:(first.x+second.x)/2,y:(first.y+second.y)/2};
+  const {left,top,width,height}=heatmapFloorBounds;
+  heatmapPinch={
+    distance:Math.max(1,Math.hypot(first.x-second.x,first.y-second.y)),
+    zoom:heatmapZoom,
+    anchor:{
+      x:(point.x-left-heatmapPan.x)/(width*heatmapZoom)*100,
+      y:(point.y-top-heatmapPan.y)/(height*heatmapZoom)*100
+    }
+  };
+  heatmapIsDragging=false;
+  heatmapPanStart=null;
+  const person=document.getElementById('heatmapPerson');
+  person.classList.remove('is-dragging','is-extended');
+}
+heatmapStage.addEventListener('pointerdown',event=>{
+  if(event.pointerType==='mouse'&&event.button!==0) return;
+  event.preventDefault();
+  heatmapPointers.set(event.pointerId,getHeatmapPointer(event));
+  heatmapStage.setPointerCapture(event.pointerId);
+  if(heatmapPointers.size===1){
+    const person=document.getElementById('heatmapPerson');
+    person.classList.remove('is-extended');
+    person.classList.add('is-dragging');
+    heatmapIsDragging=true;
+    heatmapPanStart={pointerX:event.clientX,pointerY:event.clientY,panX:heatmapPan.x,panY:heatmapPan.y};
+  }else if(heatmapPointers.size===2){
+    startHeatmapPinch();
+  }
+});
+heatmapStage.addEventListener('pointermove',event=>{
+  if(!heatmapPointers.has(event.pointerId)) return;
+  heatmapPointers.set(event.pointerId,getHeatmapPointer(event));
+  if(heatmapPointers.size>=2&&heatmapPinch){
+    const [first,second]=[...heatmapPointers.values()];
+    const point={x:(first.x+second.x)/2,y:(first.y+second.y)/2};
+    const distance=Math.max(1,Math.hypot(first.x-second.x,first.y-second.y));
+    setHeatmapZoomAt(heatmapPinch.zoom*distance/heatmapPinch.distance,heatmapPinch.anchor,point);
+  }else if(heatmapIsDragging){
+    moveHeatmapMap(event);
+  }
+});
+function finishHeatmapDrag(){
+  heatmapIsDragging=false;
+  heatmapPanStart=null;
+  const person=document.getElementById('heatmapPerson');
+  person.classList.remove('is-dragging');
+  person.classList.add('is-extended');
+}
+function endHeatmapPointer(event){
+  heatmapPointers.delete(event.pointerId);
+  if(heatmapPointers.size>=2){
+    startHeatmapPinch();
+  }else if(heatmapPointers.size===1){
+    const [remaining]=heatmapPointers.values();
+    heatmapPinch=null;
+    heatmapIsDragging=true;
+    heatmapPanStart={pointerX:remaining.clientX,pointerY:remaining.clientY,panX:heatmapPan.x,panY:heatmapPan.y};
+    const person=document.getElementById('heatmapPerson');
+    person.classList.remove('is-extended');
+    person.classList.add('is-dragging');
+  }else{
+    heatmapPinch=null;
+    finishHeatmapDrag();
+  }
+}
+heatmapStage.addEventListener('pointerup',endHeatmapPointer);
+heatmapStage.addEventListener('pointercancel',endHeatmapPointer);
+heatmapStage.addEventListener('wheel',event=>{
+  if(!heatmapFloorBounds) return;
+  event.preventDefault();
+  const rect=heatmapStage.getBoundingClientRect();
+  const point={x:event.clientX-rect.left,y:event.clientY-rect.top};
+  const {left,top,width,height}=heatmapFloorBounds;
+  const anchor={
+    x:(point.x-left-heatmapPan.x)/(width*heatmapZoom)*100,
+    y:(point.y-top-heatmapPan.y)/(height*heatmapZoom)*100
+  };
+  setHeatmapZoomAt(heatmapZoom*Math.exp(-event.deltaY*.0005),anchor,point);
+},{passive:false});
+document.getElementById('heatmapFloorImage').addEventListener('load',renderHeatmap);
+document.getElementById('resetHeatmap').addEventListener('click',()=>{
+  heatmapPan={x:0,y:0};
+  heatmapZoom=1;
+  heatmapPersonPosition={x:50,y:50};
+  document.getElementById('heatmapPerson').classList.remove('is-extended');
+  renderHeatmap();
+});
+document.getElementById('heatmapSettings').addEventListener('click',event=>{
+  loadHeatmapDisplaySettings();
+  applyHeatmapDisplaySettings();
+  heatmapSettingsPanel.classList.add('is-open');
+  heatmapSettingsPanel.setAttribute('aria-hidden','false');
+  document.getElementById('heatmapSettingsDone').focus({preventScroll:true});
+});
+const heatmapMetricPicker=document.getElementById('heatmapMetricPicker');
+const heatmapSettingsPanel=document.getElementById('heatmapSettingsPanel');
+updateHeatmapMetricAvailability();
+function updateHeatmapLegendScale(metric){
+  const speedMetrics=new Set(['Download speed','Upload speed','Wireless transmit rate','Iperf TCP download speed','Iperf TCP upload speed','Iperf UDP download speed','Iperf UDP upload speed','Low download rate','Low upload rate']);
+  const dbmMetrics=new Set(['Signal level','Noise level','Low signal level','Low secondary signal level','Secondary signal level']);
+  const dbMetrics=new Set(['Signal-to-interference ratio','Signal-to-noise ratio','Overlapping channels (SIR)']);
+  let min='0',max='100';
+  if(speedMetrics.has(metric)){min='0 Mbps';max='100 Mbps'}
+  else if(metric==='Iperf UDP jitter'){min='0 ms';max='100 ms'}
+  else if(metric==='Quantity of access points'){min='0 APs';max='20 APs'}
+  else if(metric==='PHY mode (a/b/g/n/ac/ax/be) coverage'||metric==='Frequency band coverage'||metric==='Issues with SNR'||metric==='High level of noise'){min='0%';max='100%'}
+  else if(dbmMetrics.has(metric)){min='−100 dBm';max='−30 dBm'}
+  else if(dbMetrics.has(metric)){min='−20 dB';max='60 dB'}
+  document.getElementById('heatmapLegendMin').textContent=min;
+  document.getElementById('heatmapLegendMax').textContent=max;
+}
+function setHeatmapMetric(metric){
+  document.getElementById('heatmapMetricLabel').textContent=metric;
+  document.getElementById('heatmapMetricButton').setAttribute('aria-label',`Choose heatmap metric. Selected: ${metric}`);
+  updateHeatmapLegendScale(metric);
+  document.querySelectorAll('.metric-option').forEach(option=>{
+    const selected=option.dataset.metric===metric;
+    option.setAttribute('aria-checked',String(selected));
+  });
+}
+let selectedHeatmapMetric=getDefaultHeatmapMetric();
+try{selectedHeatmapMetric=localStorage.getItem(getSelectedMetricKey())||selectedHeatmapMetric}catch(error){}
+if(activeProductType==='rfid'&&selectedHeatmapMetric==='Download speed') selectedHeatmapMetric='Signal level';
+if(![...document.querySelectorAll('.metric-option')].some(option=>option.dataset.metric===selectedHeatmapMetric)) selectedHeatmapMetric=getDefaultHeatmapMetric();
+try{localStorage.setItem(getSelectedMetricKey(),selectedHeatmapMetric)}catch(error){}
+setHeatmapMetric(selectedHeatmapMetric);
+loadHeatmapDisplaySettings();
+applyHeatmapDisplaySettings();
+function closeHeatmapSettings(){
+  heatmapSettingsPanel.classList.remove('is-open');
+  heatmapSettingsPanel.setAttribute('aria-hidden','true');
+  document.getElementById('heatmapSettings').focus({preventScroll:true});
+  renderHeatmap();
+}
+document.getElementById('heatmapSettingsBack').addEventListener('click',closeHeatmapSettings);
+document.getElementById('heatmapSettingsDone').addEventListener('click',closeHeatmapSettings);
+document.querySelectorAll('.gradient-choice').forEach(button=>button.addEventListener('click',()=>{
+  heatmapDisplaySettings.gradient=button.dataset.gradient;
+  saveHeatmapDisplaySettings();applyHeatmapDisplaySettings();renderHeatmap();
+}));
+function updateDisplayRange(which,value){
+  const range=getHeatmapMetricRange();
+  const key=which==='min'?'min':'max';
+  const other=which==='min'?'max':'min';
+  let next=Math.max(range.min,Math.min(range.max,Number(value)));
+  if(key==='min'&&next>=heatmapDisplaySettings.max) next=heatmapDisplaySettings.max-1;
+  if(key==='max'&&next<=heatmapDisplaySettings.min) next=heatmapDisplaySettings.min+1;
+  heatmapDisplaySettings[key]=next;
+  document.getElementById(`${key}SpeedValue`).value=String(next);
+  document.getElementById(`${key}SpeedSlider`).value=String(next);
+  saveHeatmapDisplaySettings();applyHeatmapDisplaySettings();renderHeatmap();
+}
+['min','max'].forEach(which=>{
+  document.getElementById(`${which}SpeedValue`).addEventListener('change',event=>updateDisplayRange(which,event.target.value));
+  document.getElementById(`${which}SpeedSlider`).addEventListener('input',event=>updateDisplayRange(which,event.target.value));
+});
+document.querySelectorAll('.settings-toggle').forEach(button=>button.addEventListener('click',()=>{
+  const key=button.dataset.setting;
+  heatmapDisplaySettings[key]=!heatmapDisplaySettings[key];
+  saveHeatmapDisplaySettings();applyHeatmapDisplaySettings();renderHeatmap();
+}));
+document.getElementById('samplingMode').addEventListener('change',event=>{
+  heatmapDisplaySettings.samplingMode=event.target.value;
+  saveHeatmapDisplaySettings();renderHeatmap();
+});
+document.getElementById('heatmapSettingsReset').addEventListener('click',()=>{
+  const range=getHeatmapMetricRange();
+  heatmapDisplaySettings={gradient:'spectrum',min:range.defaultMin,max:range.defaultMax,floorPlan:true,surveyPath:true,samplingMode:'Simple',grayUnmeasured:true};
+  saveHeatmapDisplaySettings();applyHeatmapDisplaySettings();renderHeatmap();
+});
+document.getElementById('heatmapMetricButton').addEventListener('click',()=>{
+  heatmapMetricPicker.classList.add('is-open');
+  heatmapMetricPicker.setAttribute('aria-hidden','false');
+  document.querySelector('.metric-option[aria-checked="true"]')?.focus({preventScroll:true});
+});
+document.getElementById('heatmapMetricBack').addEventListener('click',()=>{
+  heatmapMetricPicker.classList.remove('is-open');
+  heatmapMetricPicker.setAttribute('aria-hidden','true');
+  document.getElementById('heatmapMetricButton').focus({preventScroll:true});
+});
+document.querySelectorAll('.metric-option').forEach(option=>option.addEventListener('click',()=>{
+  selectedHeatmapMetric=option.dataset.metric;
+  try{localStorage.setItem(getSelectedMetricKey(),selectedHeatmapMetric)}catch(error){}
+  setHeatmapMetric(selectedHeatmapMetric);
+  loadHeatmapDisplaySettings();
+  applyHeatmapDisplaySettings();
+  renderHeatmap();
+  heatmapMetricPicker.classList.remove('is-open');
+  heatmapMetricPicker.setAttribute('aria-hidden','true');
+  document.getElementById('heatmapMetricButton').focus({preventScroll:true});
+}));
+document.getElementById('shareHeatmap').addEventListener('click',async()=>{
+  const title=document.getElementById('heatmapTitle').textContent;
+  try{
+    if(navigator.share) await navigator.share({title,text:'RFID signal heatmap'});
+    else if(navigator.clipboard) await navigator.clipboard.writeText(title);
+  }catch(error){}
+});
+function constrainScanPan(){
+  const map=document.getElementById('scanMap');
+  const bounds=getContainedImageBounds(map,document.getElementById('scanFloorImage'),false);
+  const markerX=scanMarkers.wifi.x/100*map.clientWidth;
+  const markerY=scanMarkers.wifi.y/100*map.clientHeight;
+  const minX=markerX-(bounds.left+bounds.width);
+  const maxX=markerX-bounds.left;
+  const minY=markerY-(bounds.top+bounds.height);
+  const maxY=markerY-bounds.top;
+  floorPlanPan.x=Math.max(minX,Math.min(maxX,floorPlanPan.x));
+  floorPlanPan.y=Math.max(minY,Math.min(maxY,floorPlanPan.y));
+  applyFloorPlanPan('scanMap');
+}
+function constrainSectorPan(){
+  const map=document.getElementById('sectorMap');
+  const bounds=getContainedImageBounds(map,document.getElementById('sectorFloorImage'),false);
+  const markerX=sectorPosition.x/100*map.clientWidth;
+  const markerY=sectorPosition.y/100*map.clientHeight;
+  const pad=Math.min(12,bounds.width/2,bounds.height/2);
+  const minX=markerX+pad-(bounds.left+bounds.width);
+  const maxX=markerX-pad-bounds.left;
+  const minY=markerY+pad-(bounds.top+bounds.height);
+  const maxY=markerY-pad-bounds.top;
+  floorPlanPan.x=Math.max(minX,Math.min(maxX,floorPlanPan.x));
+  floorPlanPan.y=Math.max(minY,Math.min(maxY,floorPlanPan.y));
+  applyFloorPlanPan('sectorMap');
+}
+function constrainDistancePan(){
+  const map=document.getElementById('distanceMap');
+  const bounds=getContainedImageBounds(map,document.getElementById('distanceFloorImage'),false);
+  const minX=Math.min(0,map.clientWidth-(bounds.left+bounds.width));
+  const maxX=Math.max(0,-bounds.left);
+  const minY=Math.min(0,map.clientHeight-(bounds.top+bounds.height));
+  const maxY=Math.max(0,-bounds.top);
+  const horizontalPanAllowance=map.clientWidth*.35;
+  const verticalPanAllowance=map.clientHeight*.35;
+  floorPlanPan.x=Math.max(minX-horizontalPanAllowance,Math.min(maxX+horizontalPanAllowance,floorPlanPan.x));
+  floorPlanPan.y=Math.max(minY-verticalPanAllowance,Math.min(maxY+verticalPanAllowance,floorPlanPan.y));
+  applyFloorPlanPan('distanceMap');
+}
+function enableFloorPlanPanning(map,keepSectorMarkerOnImage=false){
+  const touchZoomMap=keepSectorMarkerOnImage||map.id==='distanceMap';
+  const pointers=keepSectorMarkerOnImage?sectorPointers:distancePointers;
+  const getZoom=()=>keepSectorMarkerOnImage?sectorZoom:distanceZoom;
+  const setZoom=value=>{if(keepSectorMarkerOnImage)sectorZoom=value;else distanceZoom=value};
+  const getPinch=()=>keepSectorMarkerOnImage?sectorPinchStart:distancePinchStart;
+  const setPinch=value=>{if(keepSectorMarkerOnImage)sectorPinchStart=value;else distancePinchStart=value};
+  map.addEventListener('pointerdown',event=>{
+    if(event.target.closest('.distance-point,.distance-chip,.sector-marker,.scan-location-marker')) return;
+    if(touchZoomMap&&event.pointerType==='touch'){
+      pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      if(pointers.size===2){
+        activeMapPan=null;
+        const points=[...pointers.values()];
+        setPinch({distance:Math.hypot(points[1].x-points[0].x,points[1].y-points[0].y),zoom:getZoom()});
+      }else if(pointers.size===1){
+        activeMapPan={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,panX:floorPlanPan.x,panY:floorPlanPan.y};
+      }
+      map.setPointerCapture(event.pointerId);
+      return;
+    }
+    activeMapPan={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,panX:floorPlanPan.x,panY:floorPlanPan.y};
+    map.setPointerCapture(event.pointerId);
+  });
+  map.addEventListener('pointermove',event=>{
+    if(touchZoomMap&&event.pointerType==='touch'&&pointers.has(event.pointerId)){
+      pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      if(pointers.size>=2){
+        const points=[...pointers.values()];
+        const distance=Math.hypot(points[1].x-points[0].x,points[1].y-points[0].y);
+        const pinch=getPinch();
+        if(pinch&&pinch.distance>0){
+          setZoom(Math.max(1,Math.min(4,pinch.zoom*distance/pinch.distance)));
+          if(keepSectorMarkerOnImage){constrainSectorPan();syncSectorGrid();renderSectorMarker()}
+          else applyFloorPlanPan(map.id);
+        }
+        return;
+      }
+      if(!activeMapPan||activeMapPan.pointerId!==event.pointerId) return;
+    }
+    if(!activeMapPan||activeMapPan.pointerId!==event.pointerId) return;
+    if(keepSectorMarkerOnImage){
+      const bounds=getContainedImageBounds(map,document.getElementById('sectorFloorImage'),false);
+      const markerX=sectorPosition.x/100*map.clientWidth;
+      const markerY=sectorPosition.y/100*map.clientHeight;
+      const pad=Math.min(12,bounds.width/2,bounds.height/2);
+      const minX=markerX+pad-(bounds.left+bounds.width);
+      const maxX=markerX-pad-bounds.left;
+      const minY=markerY+pad-(bounds.top+bounds.height);
+      const maxY=markerY-pad-bounds.top;
+      floorPlanPan.x=Math.max(minX,Math.min(maxX,activeMapPan.panX+event.clientX-activeMapPan.startX));
+      floorPlanPan.y=Math.max(minY,Math.min(maxY,activeMapPan.panY+event.clientY-activeMapPan.startY));
+    }else if(map.id==='scanMap'){
+      const bounds=getContainedImageBounds(map,document.getElementById('scanFloorImage'),false);
+      const markerX=scanMarkers.wifi.x/100*map.clientWidth;
+      const markerY=scanMarkers.wifi.y/100*map.clientHeight;
+      const minX=markerX-(bounds.left+bounds.width);
+      const maxX=markerX-bounds.left;
+      const minY=markerY-(bounds.top+bounds.height);
+      const maxY=markerY-bounds.top;
+      floorPlanPan.x=Math.max(minX,Math.min(maxX,activeMapPan.panX+event.clientX-activeMapPan.startX));
+      floorPlanPan.y=Math.max(minY,Math.min(maxY,activeMapPan.panY+event.clientY-activeMapPan.startY));
+    }else if(map.id==='distanceMap'){
+      floorPlanPan.x=activeMapPan.panX+event.clientX-activeMapPan.startX;
+      floorPlanPan.y=activeMapPan.panY+event.clientY-activeMapPan.startY;
+      constrainDistancePan();
+    }else{
+      const maxX=map.clientWidth*.3;
+      const maxY=map.clientHeight*.3;
+      floorPlanPan.x=Math.max(-maxX,Math.min(maxX,activeMapPan.panX+event.clientX-activeMapPan.startX));
+      floorPlanPan.y=Math.max(-maxY,Math.min(maxY,activeMapPan.panY+event.clientY-activeMapPan.startY));
+    }
+    applyFloorPlanPan(map.id);
+    if(map.id==='distanceMap') renderDistancePoints();
+    else if(keepSectorMarkerOnImage) renderSectorMarker();
+    else if(map.id==='scanMap') scheduleRenderScanMarkers();
+  });
+  map.addEventListener('pointerup',event=>{
+    if(touchZoomMap&&pointers.has(event.pointerId)){
+      pointers.delete(event.pointerId);
+      if(pointers.size<2) setPinch(null);
+    }
+    stopMapPan(event);
+  });
+  map.addEventListener('pointercancel',event=>{
+    if(touchZoomMap){pointers.delete(event.pointerId);if(pointers.size<2)setPinch(null)}
+    stopMapPan(event);
+  });
+}
+function stopMapPan(event){if(activeMapPan?.pointerId===event.pointerId) activeMapPan=null}
+const distanceMap=document.getElementById('distanceMap');
+enableFloorPlanPanning(distanceMap);
+distanceMap.addEventListener('wheel',event=>{
+  event.preventDefault();
+  const previousZoom=distanceZoom;
+  const nextZoom=Math.max(1,Math.min(4,previousZoom*Math.exp(-event.deltaY*.0005)));
+  if(nextZoom===previousZoom) return;
+  const rect=distanceMap.getBoundingClientRect();
+  const pointerX=event.clientX-rect.left-distanceMap.clientWidth/2;
+  const pointerY=event.clientY-rect.top-distanceMap.clientHeight/2;
+  const zoomRatio=nextZoom/previousZoom;
+  floorPlanPan.x=pointerX-zoomRatio*(pointerX-floorPlanPan.x);
+  floorPlanPan.y=pointerY-zoomRatio*(pointerY-floorPlanPan.y);
+  distanceZoom=nextZoom;
+  constrainDistancePan();
+  applyFloorPlanPan('distanceMap');
+  renderDistancePoints();
+},{passive:false});
+const sectorMap=document.getElementById('sectorMap');
+enableFloorPlanPanning(sectorMap,true);
+sectorMap.addEventListener('wheel',event=>{
+  event.preventDefault();
+  const previousZoom=sectorZoom;
+  const nextZoom=Math.max(1,Math.min(4,previousZoom*Math.exp(-event.deltaY*.0005)));
+  if(nextZoom===previousZoom) return;
+  const rect=sectorMap.getBoundingClientRect();
+  const pointerX=event.clientX-rect.left-sectorMap.clientWidth/2;
+  const pointerY=event.clientY-rect.top-sectorMap.clientHeight/2;
+  const zoomRatio=nextZoom/previousZoom;
+  floorPlanPan.x=pointerX-zoomRatio*(pointerX-floorPlanPan.x);
+  floorPlanPan.y=pointerY-zoomRatio*(pointerY-floorPlanPan.y);
+  sectorZoom=nextZoom;
+  constrainSectorPan();
+  syncSectorGrid();
+  renderSectorMarker();
+},{passive:false});
+document.getElementById('scanMap').append(document.getElementById('scanNextSquareHint'));
+enableFloorPlanPanning(document.getElementById('scanMap'));
+const scanWifiMarker=document.getElementById('scanWifiMarker');
+scanWifiMarker.addEventListener('pointerdown',event=>{
+  if(event.target.closest('svg')){
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  event.preventDefault();
+  const map=document.getElementById('scanMap');
+  const rect=map.getBoundingClientRect();
+  activeScanMarker='wifi';
+  scanDragOffset={
+    x:scanMarkers.wifi.x/100*map.clientWidth-(event.clientX-rect.left),
+    y:scanMarkers.wifi.y/100*map.clientHeight-(event.clientY-rect.top)
+  };
+  scanWifiMarker.setPointerCapture(event.pointerId);
+});
+scanWifiMarker.addEventListener('pointermove',event=>{
+  if(activeScanMarker!=='wifi') return;
+  const map=document.getElementById('scanMap');
+  const rect=map.getBoundingClientRect();
+  const bounds=getContainedImageBounds(map,document.getElementById('scanFloorImage'));
+  const tipX=Math.max(bounds.left,Math.min(bounds.left+bounds.width,event.clientX-rect.left+scanDragOffset.x));
+  const tipY=Math.max(bounds.top,Math.min(bounds.top+bounds.height,event.clientY-rect.top+scanDragOffset.y));
+  scanMarkers.wifi={x:tipX/map.clientWidth*100,y:tipY/map.clientHeight*100};
+  scheduleRenderScanMarkers();
+});
+scanWifiMarker.addEventListener('pointerup',()=>{activeScanMarker=null});
+scanWifiMarker.addEventListener('pointercancel',()=>{activeScanMarker=null});
+document.querySelectorAll('.distance-point').forEach(point=>{
+  point.addEventListener('pointerdown',event=>{
+    if(distanceMetersPerImagePixel===null) calibrateDistanceScale();
+    activeDistancePointer=point.dataset.point;
+    point.setPointerCapture(event.pointerId);
+  });
+  point.addEventListener('pointermove',event=>{
+    if(activeDistancePointer!==point.dataset.point) return;
+    const map=document.getElementById('distanceMap');
+    const mapRect=map.getBoundingClientRect();
+    const bounds=getContainedImageBounds(map,document.getElementById('distanceFloorImage'));
+    const x=Math.max(bounds.left,Math.min(bounds.left+bounds.width,event.clientX-mapRect.left));
+    const y=Math.max(bounds.top,Math.min(bounds.top+bounds.height,event.clientY-mapRect.top));
+    distancePoints[activeDistancePointer]={
+      x:(x-bounds.left)/bounds.width*100,
+      y:(y-bounds.top)/bounds.height*100
+    };
+    renderDistancePoints();
+    updateDistanceValueFromPoints();
+  });
+  point.addEventListener('pointerup',()=>{activeDistancePointer=null;updateDistanceValueFromPoints(true)});
+  point.addEventListener('pointercancel',()=>{activeDistancePointer=null;updateDistanceValueFromPoints(true)});
+});
+renderDistancePoints();
+renderSectorMarker();
+renderScanMarkers();
+window.addEventListener('resize',renderDistancePoints);
+window.addEventListener('resize',renderSectorMarker);
+document.getElementById('distanceFloorImage').addEventListener('load',renderDistancePoints);
+document.getElementById('distanceFloorImage').addEventListener('load',calibrateDistanceScale);
+document.getElementById('sectorFloorImage').addEventListener('load',()=>{syncSectorGrid();renderSectorMarker()});
+document.getElementById('scanFloorImage').addEventListener('load',()=>{syncScanGrid();renderScanMarkers();updateSavedScanCount()});
+window.addEventListener('resize',()=>{syncSectorGrid();syncScanGrid();constrainScanPan();renderScanMarkers();updateSavedScanCount()});
+document.getElementById('distanceContinue').addEventListener('click',renderDistancePoints);
+
+let points=0;
+const count=document.getElementById('pointCount');
+function getScanPointLimit(){
+  const map=document.getElementById('scanMap');
+  const image=document.getElementById('scanFloorImage');
+  const bounds=getContainedImageBounds(map,image);
+  const styles=getComputedStyle(map);
+  const defaultStep=parseFloat(styles.getPropertyValue('--grid-step'))||20;
+  const stepX=parseFloat(styles.getPropertyValue('--grid-step-x'))||defaultStep;
+  const stepY=parseFloat(styles.getPropertyValue('--grid-step-y'))||defaultStep;
+  // Only complete grid squares count; partial cells clipped at the floorplan
+  // edges should not contribute to the required scan total.
+  const columns=Math.floor(bounds.width/stepX);
+  const rows=Math.floor(bounds.height/stepY);
+  return Math.max(1,columns)*Math.max(1,rows);
+}
+function getScannedMapCoverage(){
+  const total=getScanPointLimit();
+  const percentage=Math.min(100,Math.round(points/total*100));
+  const quality=percentage<40?'poor':percentage<70?'fair':percentage<90?'good':'excellent';
+  return {percentage,quality,filled:points,total};
+}
+function updateSavedScanCount(){
+  const limit=getScanPointLimit();
+  count.textContent=points;
+  document.getElementById('pointLimit').textContent=limit;
+  const countLabel=document.getElementById('scanDataCount');
+  countLabel.setAttribute('aria-label',points>=limit?`All data points scanned: ${points}`:`${points} out of ${limit} data points scanned`);
+  document.getElementById('scanDataCountProgress').hidden=points>=limit;
+  const completeMessage=document.getElementById('scanDataCountComplete');
+  completeMessage.hidden=points<limit;
+  const coverage=getScannedMapCoverage();
+  completeMessage.innerHTML=`data points: ${points} &nbsp;•&nbsp; map coverage: <b>${coverage.percentage}%, ${coverage.quality}</b>`;
+  document.getElementById('scanBtn').disabled=false;
+  document.getElementById('undoScan').disabled=points===0||scanActive;
+  document.querySelector('#scan .done-btn').disabled=points<limit||scanActive;
+  const nextSquareHint=document.getElementById('scanNextSquareHint');
+  const hasScannedPoint=points>0;
+  nextSquareHint.classList.toggle('is-visible',hasScannedPoint);
+  nextSquareHint.setAttribute('aria-hidden',String(!hasScannedPoint));
+}
+function getActiveScanStorageKey(){
+  if(!activeScanSnapshot) return getScanStoragePrefix()+activeProjectId;
+  return getSnapshotScanStorageKey(activeProjectId,activeScanSnapshot.zoneId,activeScanSnapshot.number);
+}
+function activateProjectScanData(projectId,snapshot=null){
+  activeProjectId=projectId||'warehouse';
+  activeScanSnapshot=snapshot;
+  try{
+    const stored=JSON.parse(localStorage.getItem(getActiveScanStorageKey())||'[]');
+    savedScanPoints=Array.isArray(stored)?stored:[];
+  }catch(error){savedScanPoints=[]}
+  points=savedScanPoints.length;
+  updateSavedScanCount();
+  renderScanMarkers();
+}
+function persistScanPoints(){
+  try{localStorage.setItem(getActiveScanStorageKey(),JSON.stringify(savedScanPoints))}catch(error){}
+  markProjectActivity(activeProjectId,'modifiedAt');
+  updateSavedScanCount();
+  renderScanMarkers();
+}
+function recordScanPoint(measuredDownloadMbps=null){
+  const map=document.getElementById('scanMap');
+  const bounds=getContainedImageBounds(map,document.getElementById('scanFloorImage'));
+  const wifiX=scanMarkers.wifi.x/100*map.clientWidth;
+  const wifiY=scanMarkers.wifi.y/100*map.clientHeight;
+  const wifiImage={x:(wifiX-bounds.left)/bounds.width*100,y:(wifiY-bounds.top)/bounds.height*100};
+  const signalStrength=activeProductType==='wifi'?null:Math.round(Math.max(35,Math.min(95,78-Math.hypot((wifiImage.x-50)/70,(wifiImage.y-50)/70)*27-savedScanPoints.length*2)));
+  const downloadMbps=activeProductType==='wifi'&&measuredDownloadMbps!==null&&measuredDownloadMbps!==undefined&&Number.isFinite(Number(measuredDownloadMbps))?Number(measuredDownloadMbps):null;
+  savedScanPoints.push({user:{...scanMarkers.user},wifi:{...scanMarkers.wifi},wifiImage,wifiAnchor:'tip',signalStrength,downloadMbps,capturedAt:new Date().toISOString()});
+  points=savedScanPoints.length;
+  persistScanPoints();
+  return true;
+}
+activateProjectScanData(activeProjectId);
+loadCreatedProjects();
+function duplicateProjectOneAsSample(){
+  const sampleName='Warehouse A - RFID Survey';
+  const source=createdProjects.find(project=>/^Project\s+1$/i.test((project.name||'').trim()));
+  if(!source||createdProjects.some(project=>project.name===sampleName)) return;
+  const duplicate=JSON.parse(JSON.stringify(source));
+  duplicate.id=`project-${Date.now()}-duplicate`;
+  duplicate.name=sampleName;
+  duplicate.zones=normalizeProjectZones(Array.isArray(source.zones)?source.zones:[]);
+  const sourceScanKey=getScanStoragePrefix()+source.id;
+  const duplicateScanKey=getScanStoragePrefix()+duplicate.id;
+  try{
+    const scanData=localStorage.getItem(sourceScanKey);
+    if(scanData!==null) localStorage.setItem(duplicateScanKey,scanData);
+    createdProjects.push(duplicate);
+    localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects));
+  }catch(error){createdProjects=createdProjects.filter(project=>project.id!==duplicate.id);return}
+  addProjectToLists(duplicate);
+}
+duplicateProjectOneAsSample();
+const savedWarehouseName=getProjectDisplayName('warehouse','Warehouse A - RFID Survey');
+document.querySelectorAll('.project-open').forEach(card=>{
+  if(card.dataset.projectId!=='warehouse') return;
+  card.dataset.name=savedWarehouseName;
+  const label=card.querySelector('.name, .meta b');
+  if(label) label.textContent=savedWarehouseName;
+});
+filterProjects();
+applyProjectSort();
+let scanProgressFrame=null;
+const scanProgressDuration=6000;
+const scanProgressCircle=document.querySelector('.scan-loading-ring .progress');
+const scanProgressCircumference=2*Math.PI*17;
+let activeLibreSpeedTest=null;
+let wifiScanRunId=0;
+let libreSpeedScriptPromise=null;
+function setScanProgress(progress){
+  const normalized=Math.max(0,Math.min(100,progress))/100;
+  scanProgressCircle.style.strokeDasharray=`${scanProgressCircumference}`;
+  scanProgressCircle.style.strokeDashoffset=`${scanProgressCircumference*(1-normalized)}`;
+}
+function finishScan(saveResult=false,measuredDownloadMbps=null){
+  scanActive=false;
+  if(scanProgressFrame!==null) cancelAnimationFrame(scanProgressFrame);
+  scanProgressFrame=null;
+  document.getElementById('scan').classList.remove('scanning');
+  document.getElementById('scanBtn').setAttribute('aria-label','Start scan');
+  setScanProgress(0);
+  if(saveResult) recordScanPoint(measuredDownloadMbps);
+  updateSavedScanCount();
+  renderScanMarkers();
+}
+function ensureLibreSpeedLoaded(){
+  if(typeof window.Speedtest==='function') return Promise.resolve(window.Speedtest);
+  if(libreSpeedScriptPromise) return libreSpeedScriptPromise;
+  libreSpeedScriptPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='/speedtest.js';
+    script.onload=()=>typeof window.Speedtest==='function'?resolve(window.Speedtest):reject(new Error('LibreSpeed did not load.'));
+    script.onerror=()=>reject(new Error('Cannot reach the local LibreSpeed server. Open this app from its Docker address on the same Wi-Fi.'));
+    document.head.append(script);
+  }).catch(error=>{libreSpeedScriptPromise=null;throw error});
+  return libreSpeedScriptPromise;
+}
+function runLibreSpeedDownloadTest(onProgress){
+  return ensureLibreSpeedLoaded().then(SpeedtestClass=>new Promise((resolve,reject)=>{
+    let latestDownloadMbps=null;
+    const speedtest=new SpeedtestClass();
+    activeLibreSpeedTest=speedtest;
+    speedtest.setParameter('test_order','D');
+    speedtest.setParameter('time_auto',true);
+    speedtest.setParameter('time_dl_max',5);
+    speedtest.setParameter('url_dl','/librespeed/backend/garbage.php');
+    speedtest.onupdate=data=>{
+      if(data.dlStatus!==''&&data.dlStatus!=='Fail'&&Number.isFinite(Number(data.dlStatus))) latestDownloadMbps=Number(data.dlStatus);
+      if(Number.isFinite(Number(data.dlProgress))) onProgress(Number(data.dlProgress)*100);
+    };
+    speedtest.onend=aborted=>{
+      if(activeLibreSpeedTest===speedtest) activeLibreSpeedTest=null;
+      if(aborted||latestDownloadMbps===null) reject(new Error('Speed test failed. Check the Wi-Fi connection and try again.'));
+      else resolve(latestDownloadMbps);
+    };
+    try{speedtest.start()}catch(error){
+      if(activeLibreSpeedTest===speedtest) activeLibreSpeedTest=null;
+      reject(error);
+    }
+  }));
+}
+async function startWifiScan(scanScreen,scanButton,undoButton,doneButton){
+  scanActive=true;
+  scanScreen.classList.add('scanning');
+  scanButton.setAttribute('aria-label','Stop scan');
+  undoButton.disabled=true;
+  doneButton.disabled=true;
+  const runId=++wifiScanRunId;
+  navigator.vibrate?.(45);
+  try{
+    const measuredDownloadMbps=await runLibreSpeedDownloadTest(setScanProgress);
+    if(runId!==wifiScanRunId||!scanActive) return;
+    finishScan(true,measuredDownloadMbps);
+  }catch(error){
+    if(runId!==wifiScanRunId||!scanActive) return;
+    finishScan(false);
+    window.alert(error.message||'Unable to measure Wi-Fi speed.');
+  }
+}
+document.getElementById('scanBtn').onclick=()=>{
+  const scanScreen=document.getElementById('scan');
+  const scanButton=document.getElementById('scanBtn');
+  const undoButton=document.getElementById('undoScan');
+  const doneButton=document.querySelector('#scan .done-btn');
+  if(!scanActive){
+    if(activeProductType==='wifi'){
+      void startWifiScan(scanScreen,scanButton,undoButton,doneButton);
+      return;
+    }
+    scanActive=true;
+    scanScreen.classList.add('scanning');
+    scanButton.setAttribute('aria-label','Stop scan');
+    undoButton.disabled=true;
+    doneButton.disabled=true;
+    const startedAt=performance.now();
+    const updateProgress=now=>{
+      if(!scanActive) return;
+      const progress=Math.min(100,(now-startedAt)/scanProgressDuration*100);
+      setScanProgress(progress);
+      if(progress>=100) finishScan(true);
+      else scanProgressFrame=requestAnimationFrame(updateProgress);
+    };
+    scanProgressFrame=requestAnimationFrame(updateProgress);
+    navigator.vibrate?.(45);
+    return;
+  }
+  if(activeProductType==='wifi'){
+    wifiScanRunId++;
+    const speedtest=activeLibreSpeedTest;
+    activeLibreSpeedTest=null;
+    if(speedtest&&speedtest.getState()===3){try{speedtest.abort()}catch(error){}}
+  }
+  finishScan(false);
+  navigator.vibrate?.(45);
+};
+document.getElementById('undoScan').onclick=()=>{
+  if(points===0||scanActive) return;
+  savedScanPoints.pop();
+  points=savedScanPoints.length;
+  persistScanPoints();
+};
+function restoreLastView(){
+  // A reload always starts at the product chooser; last-view restoration can
+  // otherwise reopen an in-progress scan screen unexpectedly.
+  try{
+    const previous=JSON.parse(sessionStorage.getItem(lastViewStorageKey)||'null');
+    const size=previous?.sectorSize;
+    if(['Small','Medium','Large','XL'].includes(size)){
+      const productType=previous.productType==='wifi'?'wifi':'rfid';
+      const projectId=previous.projectId||'warehouse';
+      const snapshot=previous.scanSnapshot;
+      const snapshotPart=snapshot?`:${encodeURIComponent(snapshot.zoneId||'zone')}:${Number(snapshot.number)||1}`:':base';
+      const preferenceKey=`scanGridSize:${productType}:${projectId}${snapshotPart}`;
+      const basePreferenceKey=`scanGridSize:${productType}:${projectId}:base`;
+      if(!localStorage.getItem(preferenceKey)) localStorage.setItem(preferenceKey,size);
+      if(!localStorage.getItem(basePreferenceKey)) localStorage.setItem(basePreferenceKey,size);
+    }
+    sessionStorage.removeItem(lastViewStorageKey);
+  }catch(error){}
+  restoringLastView=true;
+  showScreen('productHome');
+  restoringLastView=false;
+  saveLastView('productHome');
+}
+restoreLastView();
+</script>
+</body>
+</html>
