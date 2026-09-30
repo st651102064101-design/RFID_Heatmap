@@ -18,6 +18,7 @@
     --orange:#ff9f0a;
     --radius:18px;
     --safe-top:16px;
+    --safe-bottom:max(48px,env(safe-area-inset-bottom,0px));
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:#111;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:var(--text)}
@@ -39,7 +40,7 @@
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     display:none;
-    padding-bottom:28px;
+    padding-bottom:var(--safe-bottom);
   }
   .screen.active{display:block}
   .nav{
@@ -105,7 +106,8 @@
     position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:50;display:none;align-items:flex-end;justify-content:center;
   }
   .sheet-backdrop.show{display:flex}
-  .sheet{width:min(414px,calc(100% - 16px));margin-bottom:12px}
+  .sheet{width:min(414px,calc(100% - 16px));margin-bottom:calc(12px + var(--safe-bottom))}
+  #newProjectSheet .sheet{margin-bottom:0}
   .sheet-card{background:#2c2c2e;border-radius:14px;overflow:hidden;margin-top:8px}
   .sheet-title{text-align:center;color:#aaa;padding:15px 14px;border-bottom:1px solid #454545;font-size:14px}
   .sheet button{width:100%;border:0;border-bottom:1px solid #454545;background:#2c2c2e;color:#5da9ff;padding:16px 12px;font-size:18px}
@@ -124,12 +126,12 @@
   .sheet .delete-confirm-actions .confirm-no{color:#5da9ff}
   .sheet .delete-confirm-actions .confirm-yes{color:var(--red)}
   .discard-confirm-backdrop.show{align-items:center;padding:18px}
-  .discard-confirm-sheet{width:min(390px,calc(100vw - 48px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 36px);overflow-y:auto;margin:0;transform:scale(.65);transform-origin:center}
+  .discard-confirm-sheet{width:min(360px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 36px);overflow-y:auto;margin:0}
   .discard-confirm-card{background:#343436;border-radius:18px;overflow:hidden}
-  .discard-confirm-title{text-align:center;color:#f5f5f7;font-size:18px;font-weight:600;padding:18px 14px 5px}
-  .discard-confirm-message{text-align:center;color:#f0f0f2;font-size:15px;line-height:1.4;padding:0 16px 17px}
+  .discard-confirm-title{text-align:center;color:#f5f5f7;font-size:20px;font-weight:600;line-height:1.3;padding:20px 16px 10px}
+  .discard-confirm-message{text-align:center;color:#f0f0f2;font-size:18px;line-height:1.4;padding:0 18px 20px}
   .sheet .discard-confirm-actions{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #555557}
-  .sheet .discard-confirm-actions button{padding:14px 10px;font-size:17px;background:transparent;border:0;border-radius:0}
+  .sheet .discard-confirm-actions button{min-height:52px;padding:14px 10px;font-size:18px;background:transparent;border:0;border-radius:0}
   .sheet .discard-confirm-actions button+button{border-left:1px solid #555557}
   .sheet .discard-confirm-actions .discard-no{color:#5da9ff}
   .sheet .discard-confirm-actions .discard-yes{color:#ff6259}
@@ -193,9 +195,9 @@
   .distance-chip input::-webkit-inner-spin-button,.distance-chip input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
   .distance-chip:after{content:"›";position:absolute;right:9px;top:50%;transform:translateY(-52%);font-size:27px;line-height:1}
   .distance-chip:focus-within:after{display:none}
-  .setup-footer{flex:0 0 auto;background:#000;padding:24px 30px 30px}
+  .setup-footer{flex:0 0 auto;background:#000;padding:24px 30px var(--safe-bottom)}
   .wizard-continue{width:100%;height:54px;border:0;border-radius:10px;background:var(--blue);color:#fff;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
-  .new-project-screen.active{display:flex;flex-direction:column;padding:42px 0 28px}
+  .new-project-screen.active{display:flex;flex-direction:column;padding:42px 0 0}
   .new-project-header{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:center;position:relative}
   .new-project-header h1{font-size:17px;margin:0;font-weight:700}
   .new-project-cancel{position:absolute;left:16px;border:0;background:none;color:var(--blue);font-size:17px;padding:8px;cursor:pointer}
@@ -209,16 +211,16 @@
   .new-project-file-name{flex:1;text-align:center;font-size:17px;letter-spacing:.5px;color:#eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .new-project-edit-image{width:40px;height:40px;flex:0 0 40px;border:0;background:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .new-project-edit-image svg{width:24px;height:24px;display:block;fill:currentColor}
-  .new-project-footer{flex:0 0 auto;padding:28px 30px 0}
+  .new-project-footer{flex:0 0 auto;padding:28px 30px var(--safe-bottom)}
   .sector-map{background-color:#242424}
   #sectorMap{flex:1 1 0;min-height:0;touch-action:none;}
   #distanceMap{flex:1 1 0;min-height:0;touch-action:none;}
-  #zoneDistance .setup-footer{padding-bottom:max(24px,env(safe-area-inset-bottom, 0px))}
+  #zoneDistance .setup-footer{padding-bottom:var(--safe-bottom)}
   .sector-map>img{z-index:0;filter:none;opacity:1}
   .sector-map:after{display:block;z-index:1;background-image:linear-gradient(to right,rgba(211,211,196,.384) 1px,transparent 1px),linear-gradient(to bottom,rgba(211,211,196,.384) 1px,transparent 1px);background-size:calc(var(--grid-step-x,var(--grid-step))*var(--sector-zoom,1)) calc(var(--grid-step-y,var(--grid-step))*var(--sector-zoom,1));background-position:50% 50%}
   .sector-square{position:absolute;z-index:2;left:50%;top:50%;width:calc(var(--square-size)*var(--sector-zoom,1));height:calc(var(--square-size)*var(--sector-zoom,1));transform:translate(-50%,-50%);border:1px solid #ffd400;background:rgba(255,212,0,.12);pointer-events:none}
   .sector-marker{position:absolute;z-index:3;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);border:1.5px solid #fff;border-radius:50%;background:#ff9500;padding:0;pointer-events:none}
-  .sector-settings{flex:0 0 auto;background:#000;padding:18px 30px 28px}
+  .sector-settings{flex:0 0 auto;background:#000;padding:18px 30px var(--safe-bottom)}
   .sector-options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
   .sector-option{height:34px;border:0;border-radius:20px;background:#303033;color:#eee;font-size:14px;cursor:pointer}
   .sector-option.active{background:#ffcc00;color:#171717}
@@ -266,6 +268,8 @@
   #scan.scanning .flow-scan-controls #scanBtn .scan-btn-label{display:none}
   .scan-flow-footer{flex:0 0 auto;background:#000;padding:18px 30px 26px}
   .scan-data-count{text-align:center;color:#8d8d93;font-size:14px;margin-bottom:24px}
+  .scan-measurement-note{max-width:420px;margin:-14px auto 14px;text-align:center;color:#777;font-size:10px;line-height:1.35}
+  #rfidSetupButton{display:block;margin:-7px auto 12px;padding:6px 12px;border:1px solid #555;border-radius:14px;background:#171717;color:#9fcaff;font-size:11px}
   #scanDataCountComplete{white-space:nowrap}
   #scanDataCountComplete b{color:#f04438;font-weight:500}
   .flow-scan-controls{display:flex;align-items:center;justify-content:space-between}
@@ -293,7 +297,7 @@
     font-size:22px;left:47%;top:44%;transform:translate(-50%,-50%);box-shadow:0 4px 14px #0006;
   }
   .ap-marker:after{content:"";position:absolute;width:4px;height:42px;background:#ff453a;top:42px;border-radius:3px}
-  .scan-footer{padding:12px 14px 20px;position:sticky;bottom:0;background:#000}
+  .scan-footer{padding:12px 14px var(--safe-bottom);position:sticky;bottom:0;background:#000}
   .coverage{text-align:center;color:#9b989d;font-size:14px;margin-bottom:14px}.coverage b{color:var(--green);font-weight:500}
   .scan-controls{display:flex;align-items:center;justify-content:space-between}
   .scan-circle{
@@ -302,7 +306,7 @@
   .scan-circle button{width:100%;height:100%;border:0;border-radius:25px;background:#ff3b30;color:#fff;font-size:20px}
   .done-btn,.undo-btn{width:74px;background:none;border:0;font-size:17px}.done-btn{color:var(--blue)}.undo-btn{color:#8d8d8d}
   .heatmap-screen .nav{border-bottom:0}
-  .heatmap-screen{padding:0 0 max(8px,env(safe-area-inset-bottom));overflow:hidden}
+  .heatmap-screen{padding:0 0 var(--safe-bottom);overflow:hidden}
   .heatmap-screen.active{display:flex;flex-direction:column}
   .heatmap-screen .nav{flex:0 0 58px;width:100%}
   .heatmap-top-actions{display:flex;align-items:center;gap:8px}
@@ -314,28 +318,25 @@
   .heatmap-fallback{background:#f8f8f8}
   .heatmap-data-layer{position:absolute;overflow:hidden;touch-action:none;transform-origin:0 0}
   .heatmap-colors{position:absolute;inset:0;background-repeat:no-repeat;mix-blend-mode:multiply;opacity:.72;filter:blur(24px);pointer-events:none}
+  .heatmap-colors.is-wifi-measurements{filter:none}
   .heatmap-connections{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
   .heatmap-route{fill:none;stroke:#2878ff;stroke-width:.75;vector-effect:non-scaling-stroke}
   .heatmap-route.is-preview{stroke-dasharray:1.4 1.1}
   .heatmap-dot{fill:#3478f6;stroke:#fff;stroke-width:.45;vector-effect:non-scaling-stroke}
   .heatmap-dot-center{fill:#fff}
-  .heatmap-person{position:absolute;z-index:4;left:50%;top:50%;width:58px;height:auto;transform:translate(-50%,calc(-100% + 10px));display:flex;flex-direction:column;align-items:center;pointer-events:none;touch-action:none}
-  .heatmap-person-value{display:none;position:relative;z-index:2;min-width:40px;padding:3px 7px;border:1px solid #77724f;border-radius:4px;background:#fff4c4;color:#333;font-size:16px;line-height:1.2;text-align:center;box-shadow:0 1px 3px #0003}
-  .heatmap-person.is-extended .heatmap-person-value{display:block}
-  .heatmap-person-value:after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:#fff4c4;border-right:1px solid #77724f;border-bottom:1px solid #77724f;transform:translateX(-50%) rotate(45deg)}
-  .heatmap-person svg{width:54px;height:78px;margin-top:1px;overflow:visible}
-  .heat-person-limbs{fill:none;stroke:#2d291d;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-  .heat-person-arm-extended,.heat-person-device{display:none}
-  .heatmap-person.is-extended .heat-person-arm-rest{display:none}
-  .heatmap-person.is-extended .heat-person-arm-extended,.heatmap-person.is-extended .heat-person-device{display:block}
-  .heat-person-body{fill:#d7a536;stroke:#332914;stroke-width:1.4;stroke-linejoin:round}
-  .heat-person-head{fill:#f1d77e;stroke:#332914;stroke-width:1.4}
-  .heat-person-device{fill:#222;stroke:#111;stroke-width:1}
-  .heatmap-person.is-dragging svg{transform:scale(1.04)}
-  .heatmap-person.is-dragging .heat-person-arm{stroke-width:2.5}
+  .heatmap-center-marker{position:absolute;z-index:4;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);pointer-events:none;user-select:none}
+  .heatmap-center-dot{position:absolute;inset:4px;border:2px solid #fff;border-radius:50%;background:#3478f6;box-shadow:0 0 0 3px #3478f655,0 1px 4px #0008}
+  .heatmap-center-value{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);min-width:40px;padding:3px 7px;border:1px solid #77724f;border-radius:4px;background:#fff4c4;color:#333;font-size:16px;line-height:1.2;text-align:center;box-shadow:0 1px 3px #0003;white-space:nowrap}
+  .heatmap-center-value:after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:#fff4c4;border-right:1px solid #77724f;border-bottom:1px solid #77724f;transform:translateX(-50%) rotate(45deg)}
+  .heatmap-no-read{fill:#555;stroke:#fff;stroke-width:.65;vector-effect:non-scaling-stroke}
+  .heatmap-no-read-mark{stroke:#ffd166;stroke-width:.65;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  .heatmap-empty-state{display:none;position:absolute;z-index:5;top:12px;left:12px;right:12px;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #666;border-radius:12px;background:#171719ed;color:#f5f5f7;font-size:14px;box-shadow:0 2px 8px #0005}
+  .heatmap-empty-state button{flex:0 0 auto;border:0;border-radius:18px;padding:8px 12px;background:var(--blue);color:#fff;font-size:14px;font-weight:600}
+  #heatmapStage[data-no-measured-data="true"] .heatmap-empty-state{display:flex}
   .heatmap-legend{flex:0 0 auto;background:#080808;padding-top:8px}
   .heatmap-legend .gradient{height:38px;position:relative;overflow:hidden}
   .heatmap-legend .gradient:after{display:block;left:var(--heatmap-legend-marker,75%);z-index:1}
+  .heatmap-legend.is-unmeasured .gradient:after{display:none}
   .heatmap-legend .legend-labels{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;font-size:14px;text-shadow:0 1px 2px #0008;pointer-events:none}
   .heatmap-controls{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:12px;padding:4px 14px 8px;background:#000}
   .heatmap-metric{height:48px;flex:1 1 0;width:100%;min-width:0;border:0;border-radius:26px;background:#1d1d1f;color:#eee;padding:0 16px;display:flex;align-items:center;justify-content:space-between;font-size:16px;text-align:left}
@@ -384,7 +385,7 @@
   .settings-sampling option{background:#1c1c1e;color:#f5f5f7}
   .settings-reset{width:100%;height:76px;border:0;border-radius:18px;background:#1c1c1e;color:var(--blue);font-size:22px;margin-top:18px}
   #heatmapStage.hide-survey-path .heatmap-route{display:none}
-  #heatmapStage.hide-sampling-points .heatmap-dot,#heatmapStage.hide-sampling-points .heatmap-dot-center{display:none}
+  #heatmapStage.hide-sampling-points .heatmap-dot,#heatmapStage.hide-sampling-points .heatmap-dot-center,#heatmapStage.hide-sampling-points .heatmap-no-read,#heatmapStage.hide-sampling-points .heatmap-no-read-mark{display:none}
   #heatmapStage[data-gray-unmeasured="true"] .heatmap-colors{background-color:rgba(145,145,145,.68)}
   #heatmapStage.hide-floor-plan .heatmap-floor,#heatmapStage.hide-floor-plan .heatmap-fallback{visibility:hidden}
   .heatmap-wrap{height:730px;background:#292728;position:relative;overflow:hidden}
@@ -640,7 +641,9 @@
     <div class="scan-next-square-hint" id="scanNextSquareHint" role="status" aria-live="polite" aria-hidden="true"><div class="scan-next-square-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 22V16.9612C14 16.3537 13.7238 15.7791 13.2494 15.3995L11.5 14M11.5 14L13 7.5M11.5 14L10 13M13 7.5L11 7M13 7.5L15.0426 10.7681C15.3345 11.2352 15.8062 11.5612 16.3463 11.6693L18 12M10 13L11 7M10 13L9.40011 16.2994C9.18673 17.473 8.00015 18.2 6.85767 17.8573L4 17M11 7L8.10557 8.44721C7.428 8.786 7 9.47852 7 10.2361V12M14.5 3.5C14.5 4.05228 14.0523 4.5 13.5 4.5C12.9477 4.5 12.5 4.05228 12.5 3.5C12.5 2.94772 12.9477 2.5 13.5 2.5C14.0523 2.5 14.5 2.94772 14.5 3.5Z"/></svg><span>Go to next square</span></div></div>
     <div class="scan-flow-map" id="scanMap" style="--grid-step:20px"><img id="scanFloorImage" alt="" draggable="false" /><div class="scan-grid" id="scanGrid" aria-hidden="true"></div><svg class="scan-history" id="scanHistory" aria-hidden="true"></svg><div id="scanLink" class="scan-link"></div><div class="scan-location-marker scan-user-marker" id="scanUserMarker" aria-label="User location"></div><button type="button" class="scan-location-marker scan-ap" id="scanWifiMarker" aria-label="Move Wi-Fi marker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9a10 10 0 0 1 14 0M8 12a6 6 0 0 1 8 0M11 15a2 2 0 0 1 2 0" stroke-linecap="round"/></svg><svg class="scan-loading-ring" viewBox="0 0 40 40" aria-hidden="true"><circle class="track" cx="20" cy="20" r="17"/><circle class="progress" cx="20" cy="20" r="17"/></svg></button><div class="scan-stand-still"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 15V7a2 2 0 0 1 4 0v7-9a2 2 0 0 1 4 0v9-7a2 2 0 0 1 4 0v9-5a2 2 0 0 1 4 0v9c0 7-4 11-10 11h-2c-3 0-5-1-7-4l-5-7a2.4 2.4 0 0 1 3.7-3l3.3 3z"/></svg><span>Stand still...</span></div></div>
     <div class="scan-flow-footer">
-      <div class="scan-data-count" id="scanDataCount" aria-live="polite"><span id="scanDataCountProgress"><span id="pointCount">0</span> out of <span id="pointLimit">25</span> data points</span><span id="scanDataCountComplete" hidden></span></div>
+      <div class="scan-data-count" id="scanDataCount" aria-live="polite"><span id="scanDataCountProgress"><span id="pointCount">0</span> out of <span id="pointLimit">3</span> data points</span><span id="scanDataCountComplete" hidden></span></div>
+      <div class="scan-measurement-note" id="scanMeasurementNote" hidden>Internet download test via Cloudflare. Cloudflare collects measurement results for aggregated insights.</div>
+      <button id="rfidSetupButton" type="button" hidden>RFID reader setup</button>
       <div class="flow-scan-controls"><button id="undoScan">Undo</button><button id="scanBtn" aria-label="Start scan"><span class="scan-btn-label">Scan</span><span class="scan-stop-icon" aria-hidden="true"></span></button><button class="done-btn go-detail">Done</button></div>
     </div>
   </section>
@@ -655,7 +658,7 @@
         <button class="icon-btn" id="resetHeatmap" aria-label="Reset heatmap view"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0 2 5M20 4v7h-7"/></svg></button>
       </div>
     </div>
-    <div class="heatmap-stage" id="heatmapStage" aria-label="RFID signal heatmap; drag to inspect a location">
+    <div class="heatmap-stage" id="heatmapStage" aria-label="RFID signal heatmap; pan and zoom to inspect">
       <svg class="heatmap-fallback" id="heatmapFallback" viewBox="0 0 600 430" aria-hidden="true">
         <rect width="600" height="430" fill="#f8f8f8"/>
         <g fill="none" stroke="#252525" stroke-width="10" stroke-linejoin="miter">
@@ -669,19 +672,10 @@
         <div class="heatmap-colors" id="heatmapColors"></div>
         <svg class="heatmap-connections" id="heatmapConnections" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
       </div>
-      <div class="heatmap-person" id="heatmapPerson" aria-label="Signal strength at selected location">
-        <div class="heatmap-person-value" id="heatmapValue">75</div>
-        <svg viewBox="0 0 64 92" aria-hidden="true">
-          <g class="heat-person-limbs">
-            <path d="M29 25v5M35 25v5M23 33l-3 8 1 8"/>
-            <path d="M41 33l3 8-1 8" class="heat-person-arm heat-person-arm-rest"/>
-            <path d="M41 33l7-7 6-11" class="heat-person-arm heat-person-arm-extended"/>
-            <path d="M26 54 22 80M38 54 42 80"/>
-          </g>
-          <circle class="heat-person-head" cx="32" cy="16" r="8"/>
-          <path class="heat-person-body" d="M24 29Q32 25 40 29L44 52Q32 57 20 52Z"/>
-          <rect class="heat-person-device" x="52" y="8" width="7" height="12" rx="1.5"/>
-        </svg>
+      <div class="heatmap-empty-state" id="heatmapEmptyState"><span>No RFID data at these scan points.</span><button id="heatmapRescan" type="button">Scan this area</button></div>
+      <div class="heatmap-center-marker" id="heatmapCenterMarker" aria-label="Center of screen">
+        <div class="heatmap-center-value" id="heatmapValue">Unmeasured</div>
+        <span class="heatmap-center-dot" aria-hidden="true"></span>
       </div>
     </div>
     <div class="heatmap-legend">
@@ -958,8 +952,11 @@ function restoreScanGridSizePreference(){
   document.querySelectorAll('.sector-option').forEach(option=>option.classList.toggle('active',option.dataset.size===size));
 }
 function showScreen(id){
+  if(id!=='scan'&&document.getElementById('scan').classList.contains('scanning')) stopCurrentScan();
   if(id==='scan') restoreScanGridSizePreference();
   screens.forEach(s=>s.classList.toggle('active', s.id===id));
+  document.getElementById('scanMeasurementNote').hidden=id!=='scan';
+  if(id==='scan') updateScanMeasurementNote();
   document.getElementById(id).scrollTop = 0;
   if(id==='zoneDistance') requestAnimationFrame(renderDistancePoints);
   if(id==='zoneSize') requestAnimationFrame(()=>{syncSectorGrid();constrainSectorPan();renderSectorMarker()});
@@ -983,7 +980,7 @@ function switchProduct(productType){
   activeProjectId='warehouse';
   activeProjectImageSrc='';
   loadCreatedProjects();
-  if(activeProductType==='wifi') seedWifiExampleProject();
+  removeGeneratedProjectExamples();
   const projectName=getProjectDisplayName('warehouse','Warehouse A - RFID Survey');
   document.querySelectorAll('.project-open[data-project-id="warehouse"]').forEach(card=>{
     card.dataset.name=projectName;
@@ -1040,7 +1037,7 @@ function getActiveProjectFloorPlanSource(){
   }
   return '';
 }
-document.getElementById('resumeScan').onclick=()=>{
+function resumeActiveProjectScan(){
   activeScanSnapshot=null;
   activateProjectScanData(activeProjectId);
   const currentZone=getActiveProjectZones()[0];
@@ -1053,7 +1050,8 @@ document.getElementById('resumeScan').onclick=()=>{
   if(source){if(image.src!==source) image.src=source}
   else image.removeAttribute('src');
   showScreen('scan');
-};
+}
+document.getElementById('resumeScan').onclick=resumeActiveProjectScan;
 document.getElementById('showHeatmap').onclick=openHeatmap;
 function openZoneActions(index){
   activeZoneIndex=index;
@@ -1229,7 +1227,7 @@ document.getElementById('listView').addEventListener('click',handleProjectMenuCl
 document.getElementById('resumeProjectScan').onclick=()=>{
   closeSheet(projectActionSheet);
   markProjectActivity(activeProjectId,'lastOpenedAt');
-  showScreen('scan');
+  resumeActiveProjectScan();
 };
 document.getElementById('deleteProjectAction').onclick=()=>{
   closeSheet(projectActionSheet);
@@ -1746,52 +1744,22 @@ function loadCreatedProjects(){
   normalizeDefaultProjectNumbers();
   createdProjects.forEach(addProjectToLists);
 }
-function removeObsoleteWifiSnapshotTwo(){
-  if(activeProductType!=='wifi') return;
-  const migrationKey='wifiHeatmapSnapshotTwoCleanupV1';
-  try{if(localStorage.getItem(migrationKey)==='done') return}catch(error){return}
-  let projects=[];
-  try{projects=JSON.parse(localStorage.getItem(getCreatedProjectsKey())||'[]')}catch(error){return}
-  if(!Array.isArray(projects)) return;
-  const project=projects.find(item=>item.id==='wifi-example-warehouse'||item.name==='Warehouse A - WiFi Survey');
-  if(!project) return;
-  const zone=(project.zones||[]).find(item=>item.name==='New Zone 1')||(project.zones||[])[0];
-  if(zone&&Array.isArray(zone.snapshots)) zone.snapshots=zone.snapshots.filter(snapshot=>Number(snapshot.number)!==2);
-  try{
-    localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(projects));
-    localStorage.setItem(migrationKey,'done');
-    createdProjects=projects;
-  }catch(error){}
-}
-function seedWifiExampleProject(){
-  const seededKey='wifiHeatmapExampleProjectSeeded';
-  removeObsoleteWifiSnapshotTwo();
-  try{if(localStorage.getItem(seededKey)==='true') return}catch(error){}
-  const sampleName='Warehouse A - WiFi Survey';
-  if(!createdProjects.some(project=>project.id==='wifi-example-warehouse'||project.name===sampleName)){
-    let rfidProjects=[];
+function removeGeneratedProjectExamples(){
+  const isGeneratedExample=project=>project.id==='wifi-example-warehouse'
+    ||(String(project.id||'').endsWith('-duplicate')&&project.name==='Warehouse A - RFID Survey');
+  const examples=createdProjects.filter(isGeneratedExample);
+  if(!examples.length) return;
+  createdProjects=createdProjects.filter(project=>!isGeneratedExample(project));
+  examples.forEach(project=>{
     try{
-      const stored=JSON.parse(localStorage.getItem('rfidHeartmapCreatedProjects')||'[]');
-      if(Array.isArray(stored)) rfidProjects=stored;
+      localStorage.removeItem(getScanStoragePrefix()+project.id);
+      (project.zones||[]).forEach((zone,zoneIndex)=>(zone.snapshots||[]).forEach(snapshot=>
+        localStorage.removeItem(getSnapshotScanStorageKey(project.id,zone.id||`zone-${zoneIndex+1}`,snapshot.number||1))
+      ));
     }catch(error){}
-    const source=rfidProjects.find(project=>project.name==='Warehouse A - RFID Survey')||rfidProjects.find(project=>/^Project\s+1$/i.test((project.name||'').trim()));
-    const example=source?JSON.parse(JSON.stringify(source)):{zones:[{name:'New Zone 1',snapshots:[{number:1,date:'2026-09-24'}]}]};
-    example.id='wifi-example-warehouse';
-    example.name=sampleName;
-    example.description='WiFi coverage survey with sample measurement points.';
-    if(!Array.isArray(example.zones)) example.zones=[{name:'New Zone 1',snapshots:[{number:1,date:example.date||'2026-09-24'}]}];
-    const firstZone=example.zones.find(zone=>zone.name==='New Zone 1')||example.zones[0];
-    if(firstZone&&Array.isArray(firstZone.snapshots)) firstZone.snapshots=firstZone.snapshots.filter(snapshot=>Number(snapshot.number)!==2);
-    createdProjects.push(example);
-    try{
-      const sourcePoints=source&&localStorage.getItem(`rfidHeartmapSurveyDataPoints:${source.id}`);
-      if(sourcePoints!==null&&sourcePoints!==undefined) localStorage.setItem(`wifiHeatmapSurveyDataPoints:${example.id}`,sourcePoints);
-      localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects));
-      localStorage.setItem('wifiHeatmapSnapshotTwoCleanupV1','done');
-      addProjectToLists(example);
-    }catch(error){createdProjects=createdProjects.filter(project=>project.id!==example.id)}
-  }
-  try{localStorage.setItem(seededKey,'true')}catch(error){}
+    document.querySelectorAll(`.project-open[data-project-id="${CSS.escape(project.id)}"]`).forEach(card=>card.remove());
+  });
+  try{localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects))}catch(error){}
 }
 function beginNewProject(){
   creatingNewProject=true;
@@ -1885,7 +1853,7 @@ document.getElementById('newProjectContinue').onclick=()=>showScreen('zoneDistan
 document.getElementById('distanceContinue').onclick=()=>showScreen('zoneSize');
 document.getElementById('zoneContinue').onclick=()=>{saveScanGridSizePreference();syncScanGrid();scanMarkers.user=getSectorSelectedImagePoint();showScreen('scan')};
 document.querySelector('#scan .done-btn').onclick=()=>{
-  if(points<getScanPointLimit()||scanActive) return;
+  if(points<getScanCompletionTarget()||scanActive) return;
   if(activeScanSnapshot){
     openHeatmap();
     return;
@@ -1899,6 +1867,7 @@ function requestDiscardNewProject(){
   document.getElementById(id).onclick=requestDiscardNewProject;
 });
 document.getElementById('scanBack').onclick=()=>{
+  if(scanActive) stopCurrentScan();
   if(activeScanSnapshot){
     activeScanSnapshot=null;
     activateProjectScanData(activeProjectId);
@@ -2080,7 +2049,6 @@ let scanActive=false;
 let activeScanMarker=null;
 let scanDragOffset={x:0,y:0};
 let scanMarkersFrame=null;
-let heatmapPersonPosition={x:50,y:50};
 let heatmapIsDragging=false;
 let heatmapPan={x:0,y:0};
 let heatmapZoom=1;
@@ -2306,11 +2274,15 @@ function getHeatmapPoints(imageHeight){
       if(saved.downloadMbps===null||saved.downloadMbps===undefined||saved.downloadMbps==='') return null;
       const downloadMbps=Number(saved.downloadMbps);
       if(!Number.isFinite(downloadMbps)||downloadMbps<0) return null;
-      return {x,y,metricValue:downloadMbps,strength:Math.max(0,Math.min(100,downloadMbps/10))};
+      return {x,y,metricValue:downloadMbps,strength:Math.max(0,Math.min(100,downloadMbps/10)),scanCellSizeX:Number(saved.scanCellSizeX)||null,scanCellSizeY:Number(saved.scanCellSizeY)||null,measured:true};
     }
-    const distanceFromCenter=Math.hypot((x-50)/70,(y-50)/70);
-    const strength=Number.isFinite(Number(saved.signalStrength))?Number(saved.signalStrength):Math.round(Math.max(35,Math.min(95,78-distanceFromCenter*27-index*2)));
-    return {x,y,strength};
+    const rssi=Number(saved.rfidRssiDbm??saved.signalStrengthDbm);
+    if(!Number.isFinite(rssi)||rssi>=0||rssi< -120){
+      return saved.measurementSource==='zebra-rfid-sdk'&&(saved.rfidDetected===false||saved.signalStrengthDbm===null)
+        ?{x,y,measured:false,noRead:true}:null;
+    }
+    const strength=Math.max(0,Math.min(100,(rssi+100)/70*100));
+    return {x,y,strength,metricValue:rssi,scanCellSizeX:Number(saved.scanCellSizeX)||null,scanCellSizeY:Number(saved.scanCellSizeY)||null,measured:true};
   }).filter(Boolean);
 }
 function heatColorForStrength(strength){
@@ -2327,6 +2299,35 @@ function heatColorForStrength(strength){
   const mix=(hexA,hexB,t)=>Math.round(parseInt(hexA,16)+(parseInt(hexB,16)-parseInt(hexA,16))*t).toString(16).padStart(2,'0');
   const t=(value-fromAt)/(toAt-fromAt||1);
   return '#'+[1,3,5].map(offset=>mix(fromColor.slice(offset,offset+2),toColor.slice(offset,offset+2),t)).join('');
+}
+function getHeatmapSupportRadius(points,index){
+  const point=points[index];
+  const cellWidth=Number(point.scanCellSizeX);
+  const cellHeight=Number(point.scanCellSizeY);
+  if(Number.isFinite(cellWidth)&&cellWidth>0&&Number.isFinite(cellHeight)&&cellHeight>0){
+    return {x:Math.min(50,cellWidth/2),y:Math.min(50,cellHeight/2)};
+  }
+  let nearestDistance=Infinity;
+  for(let otherIndex=0;otherIndex<points.length;otherIndex++){
+    if(otherIndex===index) continue;
+    const other=points[otherIndex];
+    nearestDistance=Math.min(nearestDistance,Math.hypot(point.x-other.x,point.y-other.y));
+  }
+  const fallback=Number.isFinite(nearestDistance)?Math.max(2,Math.min(12,nearestDistance*.45)):12;
+  return {x:fallback,y:fallback};
+}
+function getNearbyHeatmapPoints(points,location){
+  return points.flatMap((point,index)=>{
+    const dx=(location.x-point.x)/100;
+    const dy=(location.y-point.y)/100;
+    const radius=getHeatmapSupportRadius(points,index);
+    const normalizedDistanceSquared=(dx*100/radius.x)**2+(dy*100/radius.y)**2;
+    return normalizedDistanceSquared<=1?[{point,distanceSquared:dx*dx+dy*dy}]:[];
+  });
+}
+function setHeatmapUnmeasured(unmeasured){
+  document.querySelector('.heatmap-legend')?.classList.toggle('is-unmeasured',unmeasured);
+  document.getElementById('heatmapStage')?.toggleAttribute('data-location-unmeasured',unmeasured);
 }
 function applyHeatmapDisplaySettings(){
   const range=getHeatmapMetricRange();
@@ -2364,52 +2365,91 @@ function applyHeatmapDisplaySettings(){
 function updateHeatmapSignal(){
   const valueElement=document.getElementById('heatmapValue');
   const wifiMetric=activeProductType==='wifi'&&selectedHeatmapMetric==='Download speed';
+  const unmeasuredMessage=wifiMetric?'No Wi-Fi speed scan has been recorded on this floor plan.':'No real RFID tag RSSI scan has been recorded on this floor plan.';
   if(!savedScanPoints.length){
-    valueElement.textContent=wifiMetric?'N/A':'75';
-    valueElement.title=wifiMetric?'Wi-Fi speed estimate is unavailable in this browser.':'Signal strength';
-    valueElement.setAttribute('aria-label',wifiMetric?'Wi-Fi speed estimate unavailable':'Signal strength');
-    updateHeatmapLegendMarker(wifiMetric?0:75);
+    document.getElementById('heatmapStage')?.removeAttribute('data-no-measured-data');
+    valueElement.textContent='Unmeasured';
+    valueElement.title=unmeasuredMessage;
+    valueElement.setAttribute('aria-label',`Unmeasured: ${unmeasuredMessage}`);
+    setHeatmapUnmeasured(true);
+    updateHeatmapLegendMarker(0);
     return;
   }
-  const points=getHeatmapPoints(heatmapDataLayer.clientHeight||1);
+  const allPoints=getHeatmapPoints(heatmapDataLayer.clientHeight||1);
+  const points=allPoints.filter(point=>point.measured);
+  document.getElementById('heatmapStage')?.toggleAttribute('data-no-measured-data',points.length===0&&allPoints.some(point=>point.noRead));
   if(!points.length){
-    valueElement.textContent=wifiMetric?'N/A':'75';
-    valueElement.title=wifiMetric?'Wi-Fi speed estimate is unavailable in this browser.':'Signal strength';
-    valueElement.setAttribute('aria-label',wifiMetric?'Wi-Fi speed estimate unavailable':'Signal strength');
-    updateHeatmapLegendMarker(wifiMetric?0:75);
+    valueElement.textContent='Unmeasured';
+    valueElement.title=wifiMetric?'No valid Wi-Fi speed scans are available on this floor plan.':'No valid TC501 RFID tag RSSI scans are available on this floor plan.';
+    valueElement.setAttribute('aria-label',`Unmeasured: ${valueElement.title}`);
+    setHeatmapUnmeasured(true);
+    updateHeatmapLegendMarker(0);
     return;
   }
   const stage=document.getElementById('heatmapStage');
   const {left,top,width,height}=heatmapFloorBounds;
-  const personOnFloor={
-    x:(heatmapPersonPosition.x/100*stage.clientWidth-left-heatmapPan.x)/(width*heatmapZoom)*100,
-    y:(heatmapPersonPosition.y/100*stage.clientHeight-top-heatmapPan.y)/(height*heatmapZoom)*100
+  const inspectedLocation={
+    x:(stage.clientWidth/2-left-heatmapPan.x)/(width*heatmapZoom)*100,
+    y:(stage.clientHeight/2-top-heatmapPan.y)/(height*heatmapZoom)*100
   };
   let weightedTotal=0;
   let weightedMetricTotal=0;
   let totalWeight=0;
-  for(const point of points){
-    const dx=(personOnFloor.x-point.x)/100;
-    const dy=(personOnFloor.y-point.y)/100;
+  let closestDistance=Infinity;
+  const nearbyCandidates=getNearbyHeatmapPoints(points,inspectedLocation);
+  const wifiCandidates=wifiMetric?nearbyCandidates:[];
+  const rfidCandidates=wifiMetric?[]:nearbyCandidates;
+  const nearbyRssiPoints=new Set(rfidCandidates.map(candidate=>candidate.point));
+  for(let index=0;index<points.length;index++){
+    const point=points[index];
+    const dx=(inspectedLocation.x-point.x)/100;
+    const dy=(inspectedLocation.y-point.y)/100;
     const distanceSquared=dx*dx+dy*dy;
+    const distance=Math.hypot(dx*100,dy*100);
+    closestDistance=Math.min(closestDistance,distance);
+    if(wifiMetric) continue;
+    if(!nearbyRssiPoints.has(point)) continue;
     if(distanceSquared<.00001){weightedTotal=point.strength;weightedMetricTotal=point.metricValue??point.strength;totalWeight=1;break}
     const weight=1/(distanceSquared+.0025);
     weightedTotal+=point.strength*weight;
     weightedMetricTotal+=(point.metricValue??point.strength)*weight;
     totalWeight+=weight;
   }
-  const strength=Math.round(weightedTotal/totalWeight);
   if(wifiMetric){
+    if(!wifiCandidates.length){
+      valueElement.textContent='Unmeasured';
+      valueElement.title=`No scan was recorded within ${Math.min(12,closestDistance).toFixed(0)}% of this location. Wi-Fi speed is not extrapolated from distant points.`;
+      valueElement.setAttribute('aria-label','Unmeasured: no nearby Wi-Fi speed scan');
+      setHeatmapUnmeasured(true);
+      updateHeatmapLegendMarker(0);
+      return;
+    }
+    for(const {point,distanceSquared} of wifiCandidates){
+      const weight=1/(distanceSquared+.0001);
+      weightedMetricTotal+=(point.metricValue??point.strength)*weight;
+      totalWeight+=weight;
+    }
     const downloadMbps=weightedMetricTotal/totalWeight;
     valueElement.textContent=`${downloadMbps.toFixed(1)} Mbps est.`;
-    valueElement.title='Estimated download speed reported by the browser; it is not Wi-Fi signal strength.';
+    valueElement.title='Estimated only from nearby download tests (Cloudflare); unmeasured areas are not extrapolated.';
     valueElement.setAttribute('aria-label',`Estimated download speed ${downloadMbps.toFixed(1)} megabits per second`);
+    setHeatmapUnmeasured(false);
     updateHeatmapLegendMarker((downloadMbps-heatmapDisplaySettings.min)/(heatmapDisplaySettings.max-heatmapDisplaySettings.min)*100);
   }else{
-    valueElement.textContent=String(strength);
-    valueElement.title='Signal strength';
-    valueElement.setAttribute('aria-label',`Signal strength ${strength}`);
-    updateHeatmapLegendMarker(strength);
+    if(!rfidCandidates.length){
+      valueElement.textContent='Unmeasured';
+      valueElement.title='No nearby RSSI scan was recorded. RSSI is not extrapolated from distant points.';
+      valueElement.setAttribute('aria-label','Unmeasured: no nearby RSSI scan');
+      setHeatmapUnmeasured(true);
+      updateHeatmapLegendMarker(0);
+      return;
+    }
+    const signalDbm=weightedMetricTotal/totalWeight;
+    setHeatmapUnmeasured(false);
+    valueElement.textContent=`RSSI ${signalDbm.toFixed(1)} dBm est.`;
+    valueElement.title='Estimated RFID tag peak RSSI from nearby TC501 readings.';
+    valueElement.setAttribute('aria-label',`Estimated RFID tag peak RSSI ${signalDbm.toFixed(1)} dBm`);
+    updateHeatmapLegendMarker((signalDbm-heatmapDisplaySettings.min)/(heatmapDisplaySettings.max-heatmapDisplaySettings.min)*100);
   }
 }
 function updateHeatmapLegendMarker(value){
@@ -2443,15 +2483,21 @@ function renderHeatmap(){
   fallback.style.display=hasImage?'none':'block';
   document.getElementById('heatmapTitle').textContent=`${document.getElementById('detailTitle').textContent||'RFID Heatmap'} • ${document.getElementById('detailDate').textContent||'24 Sep 2026'}`;
   const points=getHeatmapPoints(height);
+  const measuredPoints=points.filter(point=>point.measured);
   const colors=document.getElementById('heatmapColors');
-  const gradients=points.map(point=>{
+  const wifiMetric=activeProductType==='wifi'&&selectedHeatmapMetric==='Download speed';
+  colors.classList.toggle('is-wifi-measurements',wifiMetric);
+  const gradients=measuredPoints.map((point,index)=>{
     const range=getHeatmapMetricRange();
     const metricValue=point.metricValue??(range.min+(point.strength/100)*(range.max-range.min));
     const scaledStrength=Math.max(0,Math.min(100,(metricValue-heatmapDisplaySettings.min)/(heatmapDisplaySettings.max-heatmapDisplaySettings.min)*100));
     const color=heatColorForStrength(scaledStrength);
-    return `radial-gradient(ellipse at ${point.x}% ${point.y}%, ${color}e8 0%, ${color}a8 15%, ${color}65 31%, transparent 57%)`;
+    const radius=getHeatmapSupportRadius(measuredPoints,index);
+    if(wifiMetric){
+      return `radial-gradient(ellipse ${radius.x}% ${radius.y}% at ${point.x}% ${point.y}%, ${color}ed 0%, ${color}c8 52%, ${color}65 82%, transparent 100%)`;
+    }
+    return `radial-gradient(ellipse ${radius.x}% ${radius.y}% at ${point.x}% ${point.y}%, ${color}e8 0%, ${color}a8 45%, ${color}65 78%, transparent 100%)`;
   });
-  if(points.length<2&&activeProductType!=='wifi') gradients.push('radial-gradient(ellipse at 52% 52%, #f6cf47b8 0%, #f6cf4770 30%, transparent 75%)');
   colors.style.backgroundImage=gradients.join(',');
   const connectionSvg=document.getElementById('heatmapConnections');
   const connectionElements=[];
@@ -2467,6 +2513,13 @@ function renderHeatmap(){
       const previous=points[index-1];
       addShape('line',{x1:previous.x,y1:previous.y,x2:point.x,y2:point.y,class:'heatmap-route'});
     }
+    if(point.noRead){
+      const markRadius=1.35;
+      addShape('circle',{cx:point.x,cy:point.y,r:2.3,class:'heatmap-no-read'});
+      addShape('line',{x1:point.x-markRadius,y1:point.y-markRadius,x2:point.x+markRadius,y2:point.y+markRadius,class:'heatmap-no-read-mark'});
+      addShape('line',{x1:point.x+markRadius,y1:point.y-markRadius,x2:point.x-markRadius,y2:point.y+markRadius,class:'heatmap-no-read-mark'});
+      continue;
+    }
     const pointRadius=heatmapDisplaySettings.samplingMode==='All'?2:heatmapDisplaySettings.samplingMode==='Detailed'?1.7:1.25;
     addShape('circle',{cx:point.x,cy:point.y,r:pointRadius,class:'heatmap-dot'});
     addShape('circle',{cx:point.x,cy:point.y,r:pointRadius*.34,class:'heatmap-dot-center'});
@@ -2481,27 +2534,19 @@ function applyHeatmapPan(){
   const {left,top,width,height}=heatmapFloorBounds;
   const scaledWidth=width*heatmapZoom;
   const scaledHeight=height*heatmapZoom;
-  const markerX=heatmapPersonPosition.x/100*stage.clientWidth;
-  const markerY=heatmapPersonPosition.y/100*stage.clientHeight;
-  const footInsetX=Math.min(18,scaledWidth/2);
-  const footInsetY=Math.min(18,scaledHeight/2);
-  const minX=markerX+footInsetX-left-scaledWidth;
-  const maxX=markerX-footInsetX-left;
-  const minY=markerY+footInsetY-top-scaledHeight;
-  const maxY=markerY-footInsetY-top;
+  const markerX=stage.clientWidth/2;
+  const markerY=stage.clientHeight/2;
+  const minX=markerX-left-scaledWidth;
+  const maxX=markerX-left;
+  const minY=markerY-top-scaledHeight;
+  const maxY=markerY-top;
   heatmapPan.x=Math.max(minX,Math.min(maxX,heatmapPan.x));
   heatmapPan.y=Math.max(minY,Math.min(maxY,heatmapPan.y));
   const transform=`translate(${heatmapPan.x}px, ${heatmapPan.y}px) scale(${heatmapZoom})`;
   ['heatmapFloorImage','heatmapFallback','heatmapDataLayer'].forEach(id=>{
     document.getElementById(id).style.transform=transform;
   });
-  positionHeatmapPerson();
   updateHeatmapSignal();
-}
-function positionHeatmapPerson(){
-  const person=document.getElementById('heatmapPerson');
-  person.style.left=`${heatmapPersonPosition.x}%`;
-  person.style.top=`${heatmapPersonPosition.y}%`;
 }
 function setHeatmapZoomAt(nextZoom,anchor,point){
   if(!heatmapFloorBounds) return;
@@ -2516,8 +2561,6 @@ function setHeatmapZoomAt(nextZoom,anchor,point){
 function openHeatmap(){
   heatmapPan={x:0,y:0};
   heatmapZoom=1;
-  heatmapPersonPosition={x:50,y:50};
-  document.getElementById('heatmapPerson').classList.remove('is-extended','is-dragging');
   showScreen('heatmap');
 }
 function moveHeatmapMap(event){
@@ -2550,8 +2593,6 @@ function startHeatmapPinch(){
   };
   heatmapIsDragging=false;
   heatmapPanStart=null;
-  const person=document.getElementById('heatmapPerson');
-  person.classList.remove('is-dragging','is-extended');
 }
 heatmapStage.addEventListener('pointerdown',event=>{
   if(event.pointerType==='mouse'&&event.button!==0) return;
@@ -2559,9 +2600,6 @@ heatmapStage.addEventListener('pointerdown',event=>{
   heatmapPointers.set(event.pointerId,getHeatmapPointer(event));
   heatmapStage.setPointerCapture(event.pointerId);
   if(heatmapPointers.size===1){
-    const person=document.getElementById('heatmapPerson');
-    person.classList.remove('is-extended');
-    person.classList.add('is-dragging');
     heatmapIsDragging=true;
     heatmapPanStart={pointerX:event.clientX,pointerY:event.clientY,panX:heatmapPan.x,panY:heatmapPan.y};
   }else if(heatmapPointers.size===2){
@@ -2583,9 +2621,6 @@ heatmapStage.addEventListener('pointermove',event=>{
 function finishHeatmapDrag(){
   heatmapIsDragging=false;
   heatmapPanStart=null;
-  const person=document.getElementById('heatmapPerson');
-  person.classList.remove('is-dragging');
-  person.classList.add('is-extended');
 }
 function endHeatmapPointer(event){
   heatmapPointers.delete(event.pointerId);
@@ -2596,9 +2631,6 @@ function endHeatmapPointer(event){
     heatmapPinch=null;
     heatmapIsDragging=true;
     heatmapPanStart={pointerX:remaining.clientX,pointerY:remaining.clientY,panX:heatmapPan.x,panY:heatmapPan.y};
-    const person=document.getElementById('heatmapPerson');
-    person.classList.remove('is-extended');
-    person.classList.add('is-dragging');
   }else{
     heatmapPinch=null;
     finishHeatmapDrag();
@@ -2622,10 +2654,9 @@ document.getElementById('heatmapFloorImage').addEventListener('load',renderHeatm
 document.getElementById('resetHeatmap').addEventListener('click',()=>{
   heatmapPan={x:0,y:0};
   heatmapZoom=1;
-  heatmapPersonPosition={x:50,y:50};
-  document.getElementById('heatmapPerson').classList.remove('is-extended');
   renderHeatmap();
 });
+document.getElementById('heatmapRescan').addEventListener('click',()=>showScreen('scan'));
 document.getElementById('heatmapSettings').addEventListener('click',event=>{
   loadHeatmapDisplaySettings();
   applyHeatmapDisplaySettings();
@@ -2985,6 +3016,7 @@ function getScanPointLimit(){
   const rows=Math.floor(bounds.height/stepY);
   return Math.max(1,columns)*Math.max(1,rows);
 }
+function getScanCompletionTarget(){return 3}
 function getScannedMapCoverage(){
   const total=getScanPointLimit();
   const percentage=Math.min(100,Math.round(points/total*100));
@@ -2992,11 +3024,14 @@ function getScannedMapCoverage(){
   return {percentage,quality,filled:points,total};
 }
 function updateSavedScanCount(){
-  const limit=getScanPointLimit();
+  const limit=getScanCompletionTarget();
   count.textContent=points;
   document.getElementById('pointLimit').textContent=limit;
+  const measurementNote=document.getElementById('scanMeasurementNote');
+  updateScanMeasurementNote();
+  measurementNote.setAttribute('aria-live','polite');
   const countLabel=document.getElementById('scanDataCount');
-  countLabel.setAttribute('aria-label',points>=limit?`All data points scanned: ${points}`:`${points} out of ${limit} data points scanned`);
+  countLabel.setAttribute('aria-label',points>=limit?`${points} data points scanned; completion target reached`:`${points} out of ${limit} data points scanned`);
   document.getElementById('scanDataCountProgress').hidden=points>=limit;
   const completeMessage=document.getElementById('scanDataCountComplete');
   completeMessage.hidden=points<limit;
@@ -3031,40 +3066,81 @@ function persistScanPoints(){
   updateSavedScanCount();
   renderScanMarkers();
 }
-function recordScanPoint(measuredDownloadMbps=null){
+function getRfidScanSummary(result){
+  const tags=Array.isArray(result?.tags)?result.tags:[];
+  const uniqueTags=new Map();
+  tags.forEach(tag=>{
+    const rssi=Number(tag?.peakRssiDbm);
+    if(!Number.isFinite(rssi)||rssi>=0||rssi< -120) return;
+    const id=String(tag?.epc||`${rssi}:${uniqueTags.size}`);
+    const current=uniqueTags.get(id);
+    const seenCount=Math.max(1,Number(tag?.seenCount)||1);
+    if(!current) uniqueTags.set(id,{rssi,seenCount});
+    else{current.rssi=Math.max(current.rssi,rssi);current.seenCount+=seenCount}
+  });
+  const values=[...uniqueTags.values()];
+  if(!values.length) return result?.completed===true&&['fixed-reader','reference-tag'].includes(result?.mode)
+    ?{meanPeakRssiDbm:null,tagCount:0,readCount:0,detected:false}:null;
+  return {
+    meanPeakRssiDbm:values.reduce((total,tag)=>total+tag.rssi,0)/values.length,
+    tagCount:values.length,
+    readCount:values.reduce((total,tag)=>total+tag.seenCount,0),
+    antennaCount:new Set(tags.map(tag=>Number(tag?.antennaId)).filter(id=>Number.isInteger(id)&&id>0)).size,
+    detected:true
+  };
+}
+function updateScanMeasurementNote(){
+  const note=document.getElementById('scanMeasurementNote');
+  if(!note) return;
+  if(!window.TC501Rfid&&window.TC501RfidBridge){
+    window.TC501Rfid={
+      startInventory:(runId,durationMs)=>window.TC501RfidBridge.postMessage(JSON.stringify({action:'start',runId:String(runId),durationMs:Number(durationMs)||6000})),
+      stopInventory:runId=>window.TC501RfidBridge.postMessage(JSON.stringify({action:'stop',runId:String(runId)})),
+      configure:()=>window.TC501RfidBridge.postMessage(JSON.stringify({action:'configure'}))
+    };
+  }
+  if(activeProductType==='wifi'){
+    const lastMeasured=savedScanPoints.filter(point=>point.measurementSource==='cloudflare-download'&&Number.isFinite(point.downloadMbps)&&point.downloadMbps>0).at(-1);
+    note.textContent=(lastMeasured?`Last measured: ${lastMeasured.downloadMbps.toFixed(1)} Mbps · `:'')+'Internet download test via Cloudflare. Cloudflare collects measurement results for aggregated insights.';
+    return;
+  }
+  const bridgeReady=!!(window.TC501Rfid&&typeof window.TC501Rfid.startInventory==='function'&&typeof window.TC501Rfid.stopInventory==='function');
+  const setupButton=document.getElementById('rfidSetupButton');
+  if(setupButton){setupButton.hidden=activeProductType!=='rfid'||!bridgeReady;setupButton.onclick=()=>window.TC501Rfid?.configure?.()}
+  note.textContent=bridgeReady
+    ?'Choose Reference tag (TC501 reads tag) or Fixed reader (fixed antennas read a tag carried by TC501). Configure before scanning.'
+    :'RFID reader unavailable in this browser. Open this page inside the TC501 RFID companion app; no simulated scan data will be saved.';
+}
+function recordScanPoint(measuredDownloadMbps=null,rfidScanResult=null){
+  if(activeProductType==='wifi'&&(!Number.isFinite(measuredDownloadMbps)||measuredDownloadMbps<=0)) throw new Error('No valid download measurement to save. Please scan again.');
+  const rfidSummary=activeProductType==='rfid'?getRfidScanSummary(rfidScanResult):null;
+  if(activeProductType==='rfid'&&!rfidSummary) throw new Error('The TC501 did not return valid RFID tag RSSI data. This scan was not saved.');
   const map=document.getElementById('scanMap');
-  const bounds=getContainedImageBounds(map,document.getElementById('scanFloorImage'));
+  const scanImage=document.getElementById('scanFloorImage');
+  const bounds=getContainedImageBounds(map,scanImage);
+  const gridStyle=getComputedStyle(map);
+  const gridStepX=parseFloat(gridStyle.getPropertyValue('--grid-step-x'))||parseFloat(gridStyle.getPropertyValue('--grid-step'))||20;
+  const gridStepY=parseFloat(gridStyle.getPropertyValue('--grid-step-y'))||parseFloat(gridStyle.getPropertyValue('--grid-step'))||20;
+  const scanCellSizeX=bounds.width>0?gridStepX/bounds.width*100:null;
+  const scanCellSizeY=bounds.height>0?gridStepY/bounds.height*100:null;
   const wifiX=scanMarkers.wifi.x/100*map.clientWidth;
   const wifiY=scanMarkers.wifi.y/100*map.clientHeight;
   const wifiImage={x:(wifiX-bounds.left)/bounds.width*100,y:(wifiY-bounds.top)/bounds.height*100};
-  const signalStrength=activeProductType==='wifi'?null:Math.round(Math.max(35,Math.min(95,78-Math.hypot((wifiImage.x-50)/70,(wifiImage.y-50)/70)*27-savedScanPoints.length*2)));
+  const signalStrength=activeProductType==='wifi'?null:rfidSummary.meanPeakRssiDbm;
   const downloadMbps=activeProductType==='wifi'&&measuredDownloadMbps!==null&&measuredDownloadMbps!==undefined&&Number.isFinite(Number(measuredDownloadMbps))?Number(measuredDownloadMbps):null;
-  savedScanPoints.push({user:{...scanMarkers.user},wifi:{...scanMarkers.wifi},wifiImage,wifiAnchor:'tip',signalStrength,downloadMbps,capturedAt:new Date().toISOString()});
+  const rfidReports=Array.isArray(rfidScanResult?.tags)?rfidScanResult.tags:[];
+  savedScanPoints.push({user:{...scanMarkers.user},wifi:{...scanMarkers.wifi},wifiImage,wifiAnchor:'tip',scanCellSizeX,scanCellSizeY,signalStrength,signalStrengthDbm:rfidSummary?.meanPeakRssiDbm??null,rfidRssiDbm:rfidSummary?.meanPeakRssiDbm??null,rfidTagCount:rfidSummary?.tagCount??0,rfidReadCount:rfidSummary?.readCount??0,rfidMode:rfidScanResult?.mode||null,rfidTargetEpc:rfidScanResult?.targetEpc||null,rfidReports,downloadMbps,measurementSource:activeProductType==='wifi'?'cloudflare-download':activeProductType==='rfid'?'zebra-rfid-sdk':null,capturedAt:new Date().toISOString()});
+  if(activeProductType==='rfid') Object.assign(savedScanPoints.at(-1),{
+    rfidDetected:rfidSummary.tagCount>0,rfidDurationMs:rfidScanResult?.durationMs??null,
+    rfidReaderHost:rfidScanResult?.readerHost??null
+  });
   points=savedScanPoints.length;
   persistScanPoints();
   return true;
 }
 activateProjectScanData(activeProjectId);
 loadCreatedProjects();
-function duplicateProjectOneAsSample(){
-  const sampleName='Warehouse A - RFID Survey';
-  const source=createdProjects.find(project=>/^Project\s+1$/i.test((project.name||'').trim()));
-  if(!source||createdProjects.some(project=>project.name===sampleName)) return;
-  const duplicate=JSON.parse(JSON.stringify(source));
-  duplicate.id=`project-${Date.now()}-duplicate`;
-  duplicate.name=sampleName;
-  duplicate.zones=normalizeProjectZones(Array.isArray(source.zones)?source.zones:[]);
-  const sourceScanKey=getScanStoragePrefix()+source.id;
-  const duplicateScanKey=getScanStoragePrefix()+duplicate.id;
-  try{
-    const scanData=localStorage.getItem(sourceScanKey);
-    if(scanData!==null) localStorage.setItem(duplicateScanKey,scanData);
-    createdProjects.push(duplicate);
-    localStorage.setItem(getCreatedProjectsKey(),JSON.stringify(createdProjects));
-  }catch(error){createdProjects=createdProjects.filter(project=>project.id!==duplicate.id);return}
-  addProjectToLists(duplicate);
-}
-duplicateProjectOneAsSample();
+removeGeneratedProjectExamples();
 const savedWarehouseName=getProjectDisplayName('warehouse','Warehouse A - RFID Survey');
 document.querySelectorAll('.project-open').forEach(card=>{
   if(card.dataset.projectId!=='warehouse') return;
@@ -3078,61 +3154,203 @@ let scanProgressFrame=null;
 const scanProgressDuration=6000;
 const scanProgressCircle=document.querySelector('.scan-loading-ring .progress');
 const scanProgressCircumference=2*Math.PI*17;
-let activeLibreSpeedTest=null;
+let activeInternetSpeedTest=null;
+let cancelActiveInternetSpeedTest=null;
 let wifiScanRunId=0;
-let libreSpeedScriptPromise=null;
+let tc501RfidRunId=0;
+let activeTc501RfidRun=null;
+let tc501RfidTimeout=null;
+let cloudflareSpeedTestPromise=null;
 function setScanProgress(progress){
   const normalized=Math.max(0,Math.min(100,progress))/100;
   scanProgressCircle.style.strokeDasharray=`${scanProgressCircumference}`;
   scanProgressCircle.style.strokeDashoffset=`${scanProgressCircumference*(1-normalized)}`;
 }
-function finishScan(saveResult=false,measuredDownloadMbps=null){
+function finishScan(saveResult=false,measuredDownloadMbps=null,rfidScanResult=null){
   scanActive=false;
   if(scanProgressFrame!==null) cancelAnimationFrame(scanProgressFrame);
   scanProgressFrame=null;
   document.getElementById('scan').classList.remove('scanning');
   document.getElementById('scanBtn').setAttribute('aria-label','Start scan');
   setScanProgress(0);
-  if(saveResult) recordScanPoint(measuredDownloadMbps);
+  if(saveResult) recordScanPoint(measuredDownloadMbps,rfidScanResult);
   updateSavedScanCount();
   renderScanMarkers();
 }
-function ensureLibreSpeedLoaded(){
-  if(typeof window.Speedtest==='function') return Promise.resolve(window.Speedtest);
-  if(libreSpeedScriptPromise) return libreSpeedScriptPromise;
-  libreSpeedScriptPromise=new Promise((resolve,reject)=>{
-    const script=document.createElement('script');
-    script.src='/speedtest.js';
-    script.onload=()=>typeof window.Speedtest==='function'?resolve(window.Speedtest):reject(new Error('LibreSpeed did not load.'));
-    script.onerror=()=>reject(new Error('Cannot reach the local LibreSpeed server. Open this app from its Docker address on the same Wi-Fi.'));
-    document.head.append(script);
-  }).catch(error=>{libreSpeedScriptPromise=null;throw error});
-  return libreSpeedScriptPromise;
+function ensureCloudflareSpeedTestLoaded(){
+  if(location.protocol==='file:') return Promise.reject(new Error('Open the app at http://localhost:8080 on this computer, or use this computer\'s LAN address on your phone. Speed tests cannot load from a local HTML file.'));
+  if(!navigator.onLine) return Promise.reject(new Error('You are offline. Reconnect to Wi-Fi and try again.'));
+  if(cloudflareSpeedTestPromise) return cloudflareSpeedTestPromise;
+  cloudflareSpeedTestPromise=import('/cloudflare-speedtest.js')
+    .then(module=>{
+      if(typeof module.default!=='function') throw new Error('Cloudflare Speedtest module is unavailable.');
+      return module.default;
+    })
+    .catch(()=>{
+      cloudflareSpeedTestPromise=null;
+      throw new Error('Cannot load the internet speed test. Open this app over HTTP and check that the device has internet access.');
+    });
+  return cloudflareSpeedTestPromise;
 }
-function runLibreSpeedDownloadTest(onProgress){
-  return ensureLibreSpeedLoaded().then(SpeedtestClass=>new Promise((resolve,reject)=>{
-    let latestDownloadMbps=null;
-    const speedtest=new SpeedtestClass();
-    activeLibreSpeedTest=speedtest;
-    speedtest.setParameter('test_order','D');
-    speedtest.setParameter('time_auto',true);
-    speedtest.setParameter('time_dl_max',5);
-    speedtest.setParameter('url_dl','/librespeed/backend/garbage.php');
-    speedtest.onupdate=data=>{
-      if(data.dlStatus!==''&&data.dlStatus!=='Fail'&&Number.isFinite(Number(data.dlStatus))) latestDownloadMbps=Number(data.dlStatus);
-      if(Number.isFinite(Number(data.dlProgress))) onProgress(Number(data.dlProgress)*100);
+function runCloudflareDownloadTest(onProgress){
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    let progress=0;
+    let timeoutId=null;
+    let speedtest=null;
+    const finish=(callback,value)=>{
+      if(settled) return;
+      settled=true;
+      if(timeoutId!==null) clearTimeout(timeoutId);
+      if(speedtest){
+        speedtest.onResultsChange=()=>{};
+        speedtest.onFinish=()=>{};
+        speedtest.onError=()=>{};
+        try{speedtest.pause()}catch(error){}
+      }
+      if(activeInternetSpeedTest===speedtest) activeInternetSpeedTest=null;
+      if(cancelActiveInternetSpeedTest===cancel) cancelActiveInternetSpeedTest=null;
+      callback(value);
     };
-    speedtest.onend=aborted=>{
-      if(activeLibreSpeedTest===speedtest) activeLibreSpeedTest=null;
-      if(aborted||latestDownloadMbps===null) reject(new Error('Speed test failed. Check the Wi-Fi connection and try again.'));
-      else resolve(latestDownloadMbps);
+    const cancel=()=>{
+      try{speedtest?.pause()}catch(error){}
+      finish(reject,new Error('Internet speed test was canceled.'));
     };
-    try{speedtest.start()}catch(error){
-      if(activeLibreSpeedTest===speedtest) activeLibreSpeedTest=null;
-      reject(error);
+    cancelActiveInternetSpeedTest=cancel;
+    timeoutId=setTimeout(()=>finish(reject,new Error('Internet speed test timed out. Check the connection and try again.')),60000);
+    ensureCloudflareSpeedTestLoaded().then(SpeedTestClass=>{
+      if(settled) return;
+      speedtest=new SpeedTestClass({
+        autoStart:false,
+        measurements:[
+          {type:'latency',numPackets:3},
+          {type:'download',bytes:100000,count:2},
+          {type:'download',bytes:1000000,count:2},
+          {type:'download',bytes:10000000,count:2},
+          {type:'download',bytes:25000000,count:2},
+          {type:'download',bytes:100000000,count:2}
+        ],
+        measureDownloadLoadedLatency:false,
+        measureUploadLoadedLatency:false,
+        bandwidthFinishRequestDuration:1000,
+        bandwidthMinRequestDuration:250
+      });
+      activeInternetSpeedTest=speedtest;
+      cancelActiveInternetSpeedTest=cancel;
+      speedtest.onResultsChange=()=>{
+        progress=Math.min(92,progress+15);
+        onProgress(progress);
+      };
+      speedtest.onFinish=results=>{
+        const bitsPerSecond=Number(results.getDownloadBandwidth());
+        if(!Number.isFinite(bitsPerSecond)||bitsPerSecond<=0){
+          finish(reject,new Error('Cloudflare could not measure a download speed. Check the connection and try again.'));
+          return;
+        }
+        onProgress(100);
+        console.info('WiFi download measurement',JSON.stringify({source:'https://speed.cloudflare.com/__down',downloadMbps:bitsPerSecond/1000000,samples:results.getDownloadBandwidthPoints?.()||[]}));
+        finish(resolve,bitsPerSecond/1000000);
+      };
+      speedtest.onError=error=>finish(reject,new Error(typeof error==='string'?error:'Cloudflare speed test failed. Check the internet connection and try again.'));
+      speedtest.play();
+    }).catch(error=>{
+      finish(reject,error instanceof Error?error:new Error('Unable to start the Cloudflare speed test.'));
+    });
+  });
+}
+function stopCurrentScan(){
+  wifiScanRunId++;
+  if(activeTc501RfidRun!==null){
+    const runId=activeTc501RfidRun;
+    activeTc501RfidRun=null;
+    if(tc501RfidTimeout!==null) clearTimeout(tc501RfidTimeout);
+    tc501RfidTimeout=null;
+    try{window.TC501Rfid?.stopInventory(runId)}catch(error){console.warn('Could not stop TC501 inventory',error)}
+  }
+  const cancel=cancelActiveInternetSpeedTest;
+  if(cancel) cancel();
+  finishScan(false);
+}
+window.onTC501RfidInventoryComplete=(runId,resultJson)=>{
+  if(activeTc501RfidRun===null||String(runId)!==String(activeTc501RfidRun)) return;
+  activeTc501RfidRun=null;
+  if(tc501RfidTimeout!==null) clearTimeout(tc501RfidTimeout);
+  tc501RfidTimeout=null;
+  let result;
+  try{result=typeof resultJson==='string'?JSON.parse(resultJson):resultJson}catch(error){result=null}
+  const summary=getRfidScanSummary(result);
+  if(result?.completed===true&&['fixed-reader','reference-tag'].includes(result?.mode)&&summary?.tagCount===0){
+    finishScan(true,null,result);
+    const note=document.getElementById('scanMeasurementNote');
+    if(note) note.textContent=`Saved: no read at this point (${Number(result.durationMs)/1000}s).`;
+    return;
+  }
+  if(!summary){
+    finishScan(false);
+    const observed=Array.isArray(result?.observedTags)?result.observedTags:[];
+    const epcs=[...new Set(observed.map(tag=>String(tag?.epc||'').trim()).filter(Boolean))];
+    if(result?.completed===true&&['fixed-reader','reference-tag'].includes(result?.mode)){
+      finishScan(true,null,result);
+      const note=document.getElementById('scanMeasurementNote');
+      if(note) note.textContent='No readable RFID tag at this point; saved as no signal.';
+    }else if(result?.mode==='reference-tag'){
+      window.alert(`TC501's built-in reader detected no readable UHF tag. Nothing was saved.\n\nCheck that this is an RFID-enabled TC501, disconnect USB/charging, and use a UHF EPC Gen2 tag (not a barcode/NFC tag). Hold the tag flat near the integrated antenna, then use “Scan tags with TC501” in RFID setup to select its EPC. If the tag is being read by FXR90, switch to Fixed reader mode instead.`);
+    }else{
+      window.alert(`The fixed reader could not return a scan result. Check that the reader is online and its antennas are enabled, then try again.`);
     }
-  }));
+    return;
+  }
+  try{
+    finishScan(true,null,result);
+    const note=document.getElementById('scanMeasurementNote');
+    if(note) note.textContent=summary.tagCount
+      ?`RSSI ${summary.meanPeakRssiDbm.toFixed(1)} dBm · ${summary.tagCount} tag(s) · ${summary.meanPeakRssiDbm>=-55?'strong':summary.meanPeakRssiDbm>=-70?'good':summary.meanPeakRssiDbm>=-85?'weak':'very weak'} · ${summary.antennaCount} antenna(s)`
+      :`No readable RFID tag at this point; saved as no signal.`;
+  }catch(error){finishScan(false);window.alert(error.message||'RFID scan result was invalid; nothing was saved.')}
+};
+window.onTC501RfidError=(runId,message)=>{
+  if(activeTc501RfidRun===null||String(runId)!==String(activeTc501RfidRun)) return;
+  activeTc501RfidRun=null;
+  if(tc501RfidTimeout!==null) clearTimeout(tc501RfidTimeout);
+  tc501RfidTimeout=null;
+  finishScan(false);
+  window.alert(String(message||'TC501 RFID reader error. This scan was not saved.'));
+};
+function startTc501RfidScan(scanScreen,scanButton,undoButton,doneButton){
+  const bridge=window.TC501Rfid;
+  if(!bridge||typeof bridge.startInventory!=='function'||typeof bridge.stopInventory!=='function'){
+    updateScanMeasurementNote();
+    window.alert('RFID scanning needs the TC501 Android companion app with Zebra RFID SDK 2.0.5.297. This browser cannot access the built-in RFID reader.');
+    return;
+  }
+  scanActive=true;
+  scanScreen.classList.add('scanning');
+  scanButton.setAttribute('aria-label','Stop scan');
+  undoButton.disabled=true;
+  doneButton.disabled=true;
+  const runId=++tc501RfidRunId;
+  activeTc501RfidRun=runId;
+  const durationMs=Number(window.TC501RfidBridge?.getScanDurationMs?.())===1000?1000:scanProgressDuration;
+  const startedAt=performance.now();
+  const updateProgress=now=>{
+    if(!scanActive||activeTc501RfidRun!==runId) return;
+    setScanProgress(Math.min(95,(now-startedAt)/durationMs*95));
+    scanProgressFrame=requestAnimationFrame(updateProgress);
+  };
+  scanProgressFrame=requestAnimationFrame(updateProgress);
+  tc501RfidTimeout=setTimeout(()=>window.onTC501RfidError(runId,'TC501 RFID scan timed out. Check the reader and try again.'),20000);
+  navigator.vibrate?.(45);
+  try{bridge.startInventory(runId,durationMs)}catch(error){window.onTC501RfidError(runId,error.message||'Could not start TC501 RFID inventory.')}
 }
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&scanActive&&activeProductType==='wifi') stopCurrentScan();
+});
+window.addEventListener('offline',()=>{
+  if(scanActive&&activeProductType==='wifi'){
+    stopCurrentScan();
+    window.alert('Connection lost. This scan was not saved. Reconnect and scan again.');
+  }
+});
 async function startWifiScan(scanScreen,scanButton,undoButton,doneButton){
   scanActive=true;
   scanScreen.classList.add('scanning');
@@ -3142,7 +3360,7 @@ async function startWifiScan(scanScreen,scanButton,undoButton,doneButton){
   const runId=++wifiScanRunId;
   navigator.vibrate?.(45);
   try{
-    const measuredDownloadMbps=await runLibreSpeedDownloadTest(setScanProgress);
+    const measuredDownloadMbps=await runCloudflareDownloadTest(setScanProgress);
     if(runId!==wifiScanRunId||!scanActive) return;
     finishScan(true,measuredDownloadMbps);
   }catch(error){
@@ -3161,30 +3379,10 @@ document.getElementById('scanBtn').onclick=()=>{
       void startWifiScan(scanScreen,scanButton,undoButton,doneButton);
       return;
     }
-    scanActive=true;
-    scanScreen.classList.add('scanning');
-    scanButton.setAttribute('aria-label','Stop scan');
-    undoButton.disabled=true;
-    doneButton.disabled=true;
-    const startedAt=performance.now();
-    const updateProgress=now=>{
-      if(!scanActive) return;
-      const progress=Math.min(100,(now-startedAt)/scanProgressDuration*100);
-      setScanProgress(progress);
-      if(progress>=100) finishScan(true);
-      else scanProgressFrame=requestAnimationFrame(updateProgress);
-    };
-    scanProgressFrame=requestAnimationFrame(updateProgress);
-    navigator.vibrate?.(45);
+    startTc501RfidScan(scanScreen,scanButton,undoButton,doneButton);
     return;
   }
-  if(activeProductType==='wifi'){
-    wifiScanRunId++;
-    const speedtest=activeLibreSpeedTest;
-    activeLibreSpeedTest=null;
-    if(speedtest&&speedtest.getState()===3){try{speedtest.abort()}catch(error){}}
-  }
-  finishScan(false);
+  stopCurrentScan();
   navigator.vibrate?.(45);
 };
 document.getElementById('undoScan').onclick=()=>{
